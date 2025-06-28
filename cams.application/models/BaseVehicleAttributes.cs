@@ -1,5 +1,3 @@
-using System;
-
 namespace cams.application.models;
 
 public  abstract class BaseVehicleAttributes
