@@ -1,28 +1,40 @@
+using cams.application.config;
 using cams.application.models;
 using FluentResults;
+using Microsoft.Extensions.Options;
 
 namespace cams.application.repositories;
 
 public class AuctionRepository : IAuctionRepository
 {
+    List<Auction> _auctions = [];
+    private readonly IVehicleRepository _vehicleRepository;
+    private readonly Dictionary<string, decimal> _startingBids;
 
-    List<Auction> auctions = [];
-    private readonly IVehicleRepository vehicleRepository;
-
-    public AuctionRepository(IVehicleRepository vehicleRepository)
+    public AuctionRepository(IVehicleRepository vehicleRepository, IOptions<VehicleBidSettings> vehicleBidSettings)
     {
-        this.vehicleRepository = vehicleRepository;
+        _startingBids = vehicleBidSettings.Value.StartingBids;
+        if (_startingBids == null || !_startingBids.Any())
+        {
+            throw new ArgumentException("Starting bids configuration is missing or empty.");
+        }
+
+        _vehicleRepository = vehicleRepository ??
+                             throw new ArgumentNullException(nameof(vehicleRepository),
+                                 "Vehicle repository cannot be null.");
     }
 
-    public async Task<Result<Auction>> CreateAuctionAsync(Guid auctionId, Vehicle vehicle, DateTime startTime, DateTime endTime, List<Bidder> bidders)
+    public async Task<Result<Auction>> CreateAuctionAsync(Guid auctionId, Vehicle vehicle, DateTime startTime,
+        DateTime endTime, List<Bidder> bidders)
     {
-        var isValidVehicle = await vehicleRepository.GetVehicleByVinAsync(vehicle.Vin);
+        var isValidVehicle = await _vehicleRepository.GetVehicleByVinAsync(vehicle.Vin);
         if (!isValidVehicle.IsFailed)
         {
-            return Result.Fail<Auction>(new Error("Invalid vehicle for auction. Vehicle must exist in the inventory.")).Value;
-
+            return Result.Fail<Auction>(new Error("Invalid vehicle for auction. Vehicle must exist in the inventory."))
+                .Value;
         }
-        bool isVehicleInActiveAuction = auctions.Any(a => a.Vehicle.Vin == vehicle.Vin && a.IsActive);
+
+        bool isVehicleInActiveAuction = _auctions.Any(a => a.Vehicle.Vin == vehicle.Vin && a.IsActive);
 
         if (isVehicleInActiveAuction)
         {
@@ -34,7 +46,7 @@ public class AuctionRepository : IAuctionRepository
         {
             Id = auctionId,
             Name = $"Auction for {vehicle.VehicleAttributes.Manufacturer} {vehicle.VehicleAttributes.Model}",
-            StartingBid = vehicle.VehicleAttributes.StartingBid, //TODO: create factory method to set starting bid based on vehicle attributes
+            StartingBid = GetStartingBid(vehicle.VehicleAttributes),
             Vehicle = vehicle,
             Bidders = bidders,
             IsActive = false,
@@ -42,32 +54,33 @@ public class AuctionRepository : IAuctionRepository
             EndTime = endTime
         };
 
-        auctions.Add(newAuction);
+        _auctions.Add(newAuction);
 
         return Result.Ok(newAuction);
     }
 
-    public Task<Result> EndAuctionAsync(Guid auctionId)
+    public Result EndAuctionAsync(Guid auctionId)
     {
-        Auction auction = auctions.FirstOrDefault(a => a.Id == auctionId && a.IsActive == true);
+        Auction auction = _auctions.FirstOrDefault(a => a.Id == auctionId && a.IsActive == true);
         if (auction == null)
         {
-            return Task.FromResult(Result.Fail(new Error("Auction not found or already ended.")));
+            return Result.Fail(new Error("Auction not found or already ended."));
         }
+
         auction.IsActive = false;
-        return Task.FromResult(Result.Ok());
+        return Result.Ok();
     }
 
     public Task<Result> PlaceBidAsync(Guid auctionId, Bidder bidder, decimal bidAmount)
     {
-        Auction auction = auctions.FirstOrDefault(a => a.Id == auctionId && a.IsActive == true);
+        Auction auction = _auctions.FirstOrDefault(a => a.Id == auctionId && a.IsActive == true);
 
         if (auction == null)
         {
             return Task.FromResult(Result.Fail(new Error("Auction not found or not active.")));
         }
 
-        bool isBidderRegistered = auctions.Any(a => a.Id == auctionId && a.Bidders.Any(b => b.Id == bidder.Id));
+        bool isBidderRegistered = _auctions.Any(a => a.Id == auctionId && a.Bidders.Any(b => b.Id == bidder.Id));
         if (!isBidderRegistered)
         {
             return Task.FromResult(Result.Fail(new Error("Bidder is not registered for this auction.")));
@@ -77,27 +90,35 @@ public class AuctionRepository : IAuctionRepository
 
         if (!isBidAmountValid)
         {
-            return Task.FromResult(Result.Fail(new Error("Bid amount must be greater than the starting bid and the current highest bid.")));
+            return Task.FromResult(Result.Fail(
+                new Error("Bid amount must be greater than the starting bid and the current highest bid.")));
         }
 
         auction.CurrentBid = bidAmount + 100; // value should be configurable. Set in code for now
         auction.HighestBidder = bidder;
 
         return Task.FromResult(Result.Ok());
-
     }
 
-    public Task<Result> StartAuctionAsync(Guid auctionId)
+    public Result StartAuctionAsync(Guid auctionId)
     {
-        Auction auction = auctions.FirstOrDefault(a => a.Id == auctionId && a.IsActive == true);
+        Auction auction = _auctions.FirstOrDefault(a => a.Id == auctionId && a.IsActive == true);
         if (auction == null)
         {
-            return Task.FromResult(Result.Fail(new Error("Auction not found or already active.")));
+            return Result.Fail(new Error("Auction not found or already active."));
         }
-        auction.IsActive = true;
-        return Task.FromResult(Result.Ok());
 
+        auction.IsActive = true;
+        return Result.Ok();
     }
 
-    
+    private decimal GetStartingBid(BaseVehicleAttributes attributes)
+    {
+        var typeName = attributes.GetType().Name.Replace("Attributes", "");
+
+        if (_startingBids.TryGetValue(typeName, out var bid))
+            return bid;
+
+        throw new InvalidOperationException($"No starting bid defined for vehicle type: {typeName}");
+    }
 }
