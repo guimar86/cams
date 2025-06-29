@@ -5,34 +5,30 @@ namespace cams.application.repositories;
 
 public class VehicleRepository : IVehicleRepository
 {
+    List<Vehicle> _auctionInventory = [];
 
-    List<models.Vehicle> _vehicles = [];
-    public Task<Result<models.Vehicle>> CreateVehicleAsync(string vin, models.VehicleType vehicleType, string manufacturer, string model, int year)
+    public Task<Vehicle> AddVehicleAsync(string vin, VehicleType vehicleType, string manufacturer, string model,
+        int year)
     {
-        if (_vehicles.Any(v => v.Vin == vin))
-        {
-            return Task.FromResult(Result.Fail<models.Vehicle>(new Error("Vehicle with this VIN already exists.")));
-        }
-
-        var vehicle = new models.Vehicle(vin, vehicleType, manufacturer, model, year);
-
-        _vehicles.Add(vehicle);
-        return Task.FromResult(Result.Ok(vehicle));
+        var vehicle = new Vehicle(vin, vehicleType, manufacturer, model, year);
+        _auctionInventory.Add(vehicle);
+        return Task.FromResult(vehicle);
     }
-    
-    
-    public Task<Result<models.Vehicle>> GetVehicleByVinAsync(string vin)
+
+
+    public Task<Vehicle> GetVehicleByVinAsync(string vin)
     {
-        var vehicle = _vehicles.FirstOrDefault(v => v.Vin == vin);
-        if (vehicle == null)
-        {
-            return Task.FromResult(Result.Fail<models.Vehicle>(new Error("Vehicle not found.")));
-        }
-        return Task.FromResult(Result.Ok(vehicle));
+        var vehicle = _auctionInventory.FirstOrDefault(v => v.Vin == vin);
+        return Task.FromResult(vehicle);
     }
 
     public IEnumerable<Vehicle> Search(Func<Vehicle, bool> predicate)
     {
-        return _vehicles.Where(predicate);
+        return _auctionInventory.Where(predicate);
+    }
+
+    public bool ExistsInActiveAuction(string vin)
+    {
+        return _auctionInventory.Any(v => v.Vin == vin);
     }
 }
