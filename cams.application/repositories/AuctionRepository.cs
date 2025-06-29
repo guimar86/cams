@@ -24,24 +24,9 @@ public class AuctionRepository : IAuctionRepository
                                  "Vehicle repository cannot be null.");
     }
 
-    public async Task<Result<Auction>> CreateAuctionAsync(Guid auctionId, Vehicle vehicle, DateTime startTime,
+    public Task<Auction> CreateAuctionAsync(Guid auctionId, Vehicle vehicle, DateTime startTime,
         DateTime endTime, List<Bidder> bidders)
     {
-        var isValidVehicle = await _vehicleRepository.GetVehicleByVinAsync(vehicle.Vin);
-        if (isValidVehicle == null)
-        {
-            return Result.Fail<Auction>(new Error("Invalid vehicle for auction. Vehicle must exist in the inventory."))
-                .Value;
-        }
-
-        bool isVehicleInActiveAuction = _auctions.Any(a => a.Vehicle.Vin == vehicle.Vin && a.IsActive);
-
-        if (isVehicleInActiveAuction)
-        {
-            return Result.Fail<Auction>(new Error("Vehicle is already in an active auction.")).Value;
-        }
-
-
         Auction newAuction = new Auction
         {
             Id = auctionId,
@@ -56,7 +41,7 @@ public class AuctionRepository : IAuctionRepository
 
         _auctions.Add(newAuction);
 
-        return Result.Ok(newAuction);
+        return Task.FromResult(newAuction);
     }
 
     public Task EndAuctionAsync(Auction auction)
@@ -78,10 +63,12 @@ public class AuctionRepository : IAuctionRepository
         return Task.CompletedTask;
     }
 
-    public Task<bool> ExistingAuctionAsync(Guid auctionId)
+    public Task<bool> ExistingAuctionByVehicle(string vin)
     {
-        return Task.FromResult(_auctions.Any(a => a.IsActive && a.Id == auctionId));
+        return Task.FromResult(_auctions.Any(a => a.IsActive && a.Vehicle.Vin==vin));
     }
+
+   
 
     public Task StartAuctionAsync(Auction auction)
     {

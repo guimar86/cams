@@ -15,10 +15,28 @@ public class AuctionService : IAuctionService
         _auctionRepository = auctionRepository;
     }
 
-    public Task<Result<Auction>> CreateAuctionAsync(Guid auctionId, Vehicle vehicle, DateTime startTime,
+    public async Task<Result<Auction>> CreateAuctionAsync(Guid auctionId, Vehicle vehicle, DateTime startTime,
         DateTime endTime, List<Bidder> bidders)
     {
-        throw new NotImplementedException();
+        var selectedVehicle = await _vehicleRepository.GetVehicleByVinAsync(vehicle.Vin);
+        if (selectedVehicle == null)
+        {
+            return Result.Fail<Auction>(new Error("Invalid vehicle for auction. Vehicle must exist in the inventory."))
+                .Value;
+        }
+
+        bool isVehicleInActiveAuction = await _auctionRepository.ExistingAuctionByVehicle(vehicle.Vin);
+        if (isVehicleInActiveAuction)
+        {
+            return Result.Fail<Auction>(new Error("Vehicle is already in an active auction."));
+        }
+        
+        var newAuction = await _auctionRepository.CreateAuctionAsync(auctionId, vehicle, startTime, endTime, bidders);
+        if (newAuction==null)
+        {
+            return Result.Fail<Auction>(new Error("Failed to create auction. Please try again."));
+        }
+        return Result.Ok(newAuction);
     }
 
     public Result StartAuctionAsync(Guid auctionId)
