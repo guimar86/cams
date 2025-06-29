@@ -13,12 +13,13 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IAuctionRepository, AuctionRepository>();
         services.AddScoped<IVehicleRepository, VehicleRepository>();
         services.Configure<VehicleBidSettings>(configuration.GetSection("VehicleBidSettings"));
-
+        services.AddCamsServices();
     }
     
-    public static void AddServices(this IServiceCollection services)
+    public static IServiceCollection AddCamsServices(this IServiceCollection services)
     {
         services.AddScoped<IVehicleService, VehicleService>();
         services.AddScoped<IAuctionService, AuctionService>();
+        return services;
     }
 }
