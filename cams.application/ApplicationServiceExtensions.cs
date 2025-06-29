@@ -1,5 +1,6 @@
 using cams.application.config;
 using cams.application.repositories;
+using cams.application.services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,5 +14,11 @@ public static class ApplicationServiceExtensions
         services.AddScoped<IVehicleRepository, VehicleRepository>();
         services.Configure<VehicleBidSettings>(configuration.GetSection("VehicleBidSettings"));
 
+    }
+    
+    public static void AddServices(this IServiceCollection services)
+    {
+        services.AddScoped<IVehicleService, VehicleService>();
+        services.AddScoped<IAuctionService, AuctionService>();
     }
 }

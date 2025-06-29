@@ -28,7 +28,7 @@ public class AuctionRepository : IAuctionRepository
         DateTime endTime, List<Bidder> bidders)
     {
         var isValidVehicle = await _vehicleRepository.GetVehicleByVinAsync(vehicle.Vin);
-        if (!isValidVehicle.IsFailed)
+        if (isValidVehicle == null)
         {
             return Result.Fail<Auction>(new Error("Invalid vehicle for auction. Vehicle must exist in the inventory."))
                 .Value;
@@ -59,58 +59,37 @@ public class AuctionRepository : IAuctionRepository
         return Result.Ok(newAuction);
     }
 
-    public Result EndAuctionAsync(Guid auctionId)
+    public Task EndAuctionAsync(Auction auction)
     {
-        Auction auction = _auctions.FirstOrDefault(a => a.Id == auctionId && a.IsActive == true);
-        if (auction == null)
-        {
-            return Result.Fail(new Error("Auction not found or already ended."));
-        }
-
         auction.IsActive = false;
-        return Result.Ok();
+        return Task.CompletedTask;
     }
 
-    public Task<Result> PlaceBidAsync(Guid auctionId, Bidder bidder, decimal bidAmount)
+    public Task<Auction> GetAuctionById(Guid auctionId)
     {
-        Auction auction = _auctions.FirstOrDefault(a => a.Id == auctionId && a.IsActive == true);
+        return Task.FromResult(_auctions.FirstOrDefault(a => a.Id == auctionId));
+    }
 
-        if (auction == null)
-        {
-            return Task.FromResult(Result.Fail(new Error("Auction not found or not active.")));
-        }
-
-        bool isBidderRegistered = _auctions.Any(a => a.Id == auctionId && a.Bidders.Any(b => b.Id == bidder.Id));
-        if (!isBidderRegistered)
-        {
-            return Task.FromResult(Result.Fail(new Error("Bidder is not registered for this auction.")));
-        }
-
-        bool isBidAmountValid = bidAmount > auction.StartingBid && bidAmount > auction.CurrentBid;
-
-        if (!isBidAmountValid)
-        {
-            return Task.FromResult(Result.Fail(
-                new Error("Bid amount must be greater than the starting bid and the current highest bid.")));
-        }
-
+    public Task PlaceBidAsync(Auction auction, Bidder bidder, decimal bidAmount)
+    {
         auction.CurrentBid = bidAmount + 100; // value should be configurable. Set in code for now
         auction.HighestBidder = bidder;
 
-        return Task.FromResult(Result.Ok());
+        return Task.CompletedTask;
     }
 
-    public Result StartAuctionAsync(Guid auctionId)
+    public Task<bool> ExistingAuctionAsync(Guid auctionId)
     {
-        Auction auction = _auctions.FirstOrDefault(a => a.Id == auctionId && a.IsActive == true);
-        if (auction == null)
-        {
-            return Result.Fail(new Error("Auction not found or already active."));
-        }
-
-        auction.IsActive = true;
-        return Result.Ok();
+        return Task.FromResult(_auctions.Any(a => a.IsActive && a.Id == auctionId));
     }
+
+    public Task StartAuctionAsync(Auction auction)
+    {
+        auction.IsActive = true;
+        return Task.CompletedTask;
+    }
+
+
 
     private decimal GetStartingBid(BaseVehicleAttributes attributes)
     {
