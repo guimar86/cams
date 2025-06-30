@@ -5,7 +5,7 @@ namespace cams.application.repositories;
 
 public class VehicleRepository : IVehicleRepository
 {
-    List<Vehicle> _auctionInventory = [];
+    private static List<Vehicle> _auctionInventory = [];
 
     public Task<Vehicle> AddVehicleAsync(string vin, VehicleType vehicleType, string manufacturer, string model,
         int year)
