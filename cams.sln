@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cams.application", "cams.ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cams.contracts", "cams.contracts\cams.contracts.csproj", "{C7ECCAAA-DCFD-44DB-9983-D04F93938AEB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cams.api", "cams.api\cams.api.csproj", "{AADF7D0A-5947-4B57-819F-D3137F0DC59A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,18 @@ Global
 		{C7ECCAAA-DCFD-44DB-9983-D04F93938AEB}.Release|x64.Build.0 = Release|Any CPU
 		{C7ECCAAA-DCFD-44DB-9983-D04F93938AEB}.Release|x86.ActiveCfg = Release|Any CPU
 		{C7ECCAAA-DCFD-44DB-9983-D04F93938AEB}.Release|x86.Build.0 = Release|Any CPU
+		{AADF7D0A-5947-4B57-819F-D3137F0DC59A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AADF7D0A-5947-4B57-819F-D3137F0DC59A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AADF7D0A-5947-4B57-819F-D3137F0DC59A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{AADF7D0A-5947-4B57-819F-D3137F0DC59A}.Debug|x64.Build.0 = Debug|Any CPU
+		{AADF7D0A-5947-4B57-819F-D3137F0DC59A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AADF7D0A-5947-4B57-819F-D3137F0DC59A}.Debug|x86.Build.0 = Debug|Any CPU
+		{AADF7D0A-5947-4B57-819F-D3137F0DC59A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AADF7D0A-5947-4B57-819F-D3137F0DC59A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AADF7D0A-5947-4B57-819F-D3137F0DC59A}.Release|x64.ActiveCfg = Release|Any CPU
+		{AADF7D0A-5947-4B57-819F-D3137F0DC59A}.Release|x64.Build.0 = Release|Any CPU
+		{AADF7D0A-5947-4B57-819F-D3137F0DC59A}.Release|x86.ActiveCfg = Release|Any CPU
+		{AADF7D0A-5947-4B57-819F-D3137F0DC59A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
