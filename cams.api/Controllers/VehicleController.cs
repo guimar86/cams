@@ -11,6 +11,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace cams.api.Controllers
 {
+    /// <summary>
+    /// Controller for managing vehicle-related operations.
+    /// </summary>
     [Produces("application/json")]
     [Consumes("application/json")]
     [Route("vehicles")]
@@ -19,11 +22,19 @@ namespace cams.api.Controllers
     {
         private readonly IVehicleService _vehicleService;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VehicleController"/> class.
+        /// </summary>
+        /// <param name="vehicleService">The vehicle service dependency.</param>
         public VehicleController(IVehicleService vehicleService)
         {
             _vehicleService = vehicleService;
         }
 
+        /// <summary>
+        /// Retrieves all vehicles.
+        /// </summary>
+        /// <returns>A list of all vehicles or 404 if none found.</returns>
         [HttpGet]
         [Route("", Name = "GetAllVehicles")]
         [ProducesResponseType(typeof(GetAllVehiclesResponse), 200)]
@@ -43,6 +54,11 @@ namespace cams.api.Controllers
             return Ok(response);
         }
 
+        /// <summary>
+        /// Adds a new vehicle.
+        /// </summary>
+        /// <param name="request">The vehicle data to add.</param>
+        /// <returns>The created vehicle response or 400 if failed.</returns>
         [HttpPost]
         [Route("", Name = "AddVehicle")]
         [ProducesResponseType(typeof(CreateVehicleResponse), 200)]
@@ -67,6 +83,13 @@ namespace cams.api.Controllers
             return Ok(response);
         }
 
+        /// <summary>
+        /// Searches for vehicles by model, manufacturer, or year.
+        /// </summary>
+        /// <param name="model">The vehicle model to search for.</param>
+        /// <param name="manufacturer">The vehicle manufacturer to search for.</param>
+        /// <param name="year">The vehicle year to search for.</param>
+        /// <returns>A list of vehicles matching the search criteria or 400 if no parameters provided.</returns>
         [HttpGet]
         [Route("search", Name = "SearchVehicles")]
         [ProducesResponseType(typeof(IEnumerable<Vehicle>), 200)]
