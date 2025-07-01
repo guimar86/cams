@@ -8,7 +8,7 @@ public class VehicleRepository : IVehicleRepository
     private static List<Vehicle> _auctionInventory =
     [
         new Vehicle("VIN1234567890", VehicleType.Sedan, "Toyota", "Camry", 2020),
-        new Vehicle("VIN2345678901", VehicleType.SUV, "Honda", "CR-V", 2021),
+        new Vehicle("VIN2345678901", VehicleType.Suv, "Honda", "CR-V", 2021),
         new Vehicle("VIN3456789012", VehicleType.Hatchback, "Volkswagen", "Golf", 2019),
         new Vehicle("VIN4567890123", VehicleType.Truck, "Ford", "F-150", 2022),
         new Vehicle("VIN5678901234", VehicleType.Sedan, "BMW", "3 Series", 2023)

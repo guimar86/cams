@@ -10,7 +10,7 @@ public static class VehicleAttributesFactory
         {
             VehicleType.Sedan => new SedanAttributes(),
             VehicleType.Hatchback => new HatchbackAttributes(),
-            VehicleType.SUV => new SuvAttributes(),
+            VehicleType.Suv => new SuvAttributes(),
             VehicleType.Truck => new TruckAttributes(),
             _ => throw new ArgumentException("Invalid vehicle type")
         };
