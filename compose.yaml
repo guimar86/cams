@@ -1,0 +1,10 @@
+﻿services:
+  cams.api:
+    image: cams.api
+    build:
+      context: .
+      dockerfile: cams.api/Dockerfile
+    ports:
+      - "8080:8080"    # Access Swagger on http://localhost:8080/swagger
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
