@@ -51,8 +51,7 @@ public class AuctionService : IAuctionService
         var selectedVehicle = await _vehicleRepository.GetVehicleByVinAsync(vehicle.Vin);
         if (selectedVehicle == null)
         {
-            return Result.Fail<Auction>(new Error("Invalid vehicle for auction. Vehicle must exist in the inventory."))
-                .Value;
+            return Result.Fail<Auction>(new Error("Invalid vehicle for auction. Vehicle must exist in the inventory."));
         }
 
         bool isVehicleInActiveAuction = await _auctionRepository.ExistingAuctionByVehicle(vehicle.Vin);
