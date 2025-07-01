@@ -8,16 +8,39 @@ public class AuctionService : IAuctionService
 {
     private readonly IVehicleRepository _vehicleRepository;
     private readonly IAuctionRepository _auctionRepository;
+    private readonly IBidderRepository _bidderRepository;
 
-    public AuctionService(IVehicleRepository vehicleRepository, IAuctionRepository auctionRepository)
+    public AuctionService(IVehicleRepository vehicleRepository, IAuctionRepository auctionRepository,
+        IBidderRepository bidderRepository)
     {
-        _vehicleRepository = vehicleRepository;
-        _auctionRepository = auctionRepository;
+        _vehicleRepository = vehicleRepository ?? throw new ArgumentNullException(nameof(vehicleRepository));
+        _auctionRepository = auctionRepository ?? throw new ArgumentNullException(nameof(auctionRepository));
+        _bidderRepository = bidderRepository ?? throw new ArgumentNullException(nameof(bidderRepository));
     }
 
-    public async Task<Result<Auction>> CreateAuctionAsync(Guid auctionId, Vehicle vehicle, DateTime startTime,
-        DateTime endTime, List<Bidder> bidders)
+    public async Task<Result<Auction>> CreateAuctionAsync(Guid auctionId, Vehicle vehicle, List<Bidder> bidders)
     {
+        if (bidders == null || bidders.Count == 0)
+        {
+            return Result.Fail<Auction>(new Error("At least one bidder must be registered for the auction."));
+        }
+
+        //check bidders existence
+        if (bidders.Any(b => b == null || b.Id == Guid.Empty || string.IsNullOrWhiteSpace(b.Name)))
+        {
+            return Result.Fail<Auction>(new Error("All bidders must have a valid ID and name."));
+        }
+
+        foreach (var bidder in bidders)
+        {
+            var existingBidder = await _bidderRepository.GetBidderByIdAsync(bidder.Id);
+            if (existingBidder == null)
+            {
+                return Result.Fail<Auction>(new Error($"Bidder with ID {bidder.Id} does not exist."));
+            }
+        }
+        //check vehicle existence
+
         var selectedVehicle = await _vehicleRepository.GetVehicleByVinAsync(vehicle.Vin);
         if (selectedVehicle == null)
         {
@@ -30,56 +53,71 @@ public class AuctionService : IAuctionService
         {
             return Result.Fail<Auction>(new Error("Vehicle is already in an active auction."));
         }
-        
-        var newAuction = await _auctionRepository.CreateAuctionAsync(auctionId, vehicle, startTime, endTime, bidders);
-        if (newAuction==null)
+
+        var newAuction = await _auctionRepository.CreateAuctionAsync(auctionId, vehicle, bidders);
+        if (newAuction == null)
         {
             return Result.Fail<Auction>(new Error("Failed to create auction. Please try again."));
         }
+
         return Result.Ok(newAuction);
     }
 
-    public Result StartAuctionAsync(Guid auctionId)
+    public async Task<Result> StartAuctionAsync(Guid auctionId)
     {
-        var existing = _auctionRepository.GetAuctionById(auctionId);
-        if (existing.Result == null)
+        try
         {
-            return Result.Fail(new Error("Auction does not exist."));
+            var auction = await _auctionRepository.GetAuctionById(auctionId);
+            if (auction == null)
+            {
+                return Result.Fail(new Error("Auction does not exist."));
+            }
+
+            if (auction.IsActive)
+            {
+                return Result.Fail(new Error("Auction is already active."));
+            }
+
+            var doesVehicleExist = await _vehicleRepository.GetVehicleByVinAsync(auction.Vehicle.Vin);
+            var isCarInActiveAuction = await _auctionRepository.ExistingAuctionByVehicle(auction.Vehicle.Vin);
+            if (doesVehicleExist != null && isCarInActiveAuction)
+            {
+                return Result.Fail(new Error("Vehicle is already in an active auction."));
+            }
+
+
+            await _auctionRepository.StartAuctionAsync(auction);
+        }
+        catch (Exception e)
+        {
+            return Result.Fail(new Error(e.Message));
         }
 
-        if (existing.Result.IsActive == true)
-        {
-            return Result.Fail(new Error("Auction is already active."));
-        }
-
-        if (existing.Result.StartTime > DateTime.UtcNow)
-        {
-            return Result.Fail(new Error("Auction cannot be started before the start time."));
-        }
-
-        _auctionRepository.StartAuctionAsync(existing.Result);
         return Result.Ok();
     }
 
     public Result EndAuctionAsync(Guid auctionId)
     {
-        var existing = _auctionRepository.GetAuctionById(auctionId);
-        if (existing.Result == null)
+        try
         {
-            return Result.Fail(new Error("Auction does not exist."));
+            var existing = _auctionRepository.GetAuctionById(auctionId);
+            if (existing.Result == null)
+            {
+                return Result.Fail(new Error("Auction does not exist."));
+            }
+
+            if (!existing.Result.IsActive)
+            {
+                return Result.Fail(new Error("Auction is not active."));
+            }
+
+            _auctionRepository.EndAuctionAsync(existing.Result);
+        }
+        catch (Exception e)
+        {
+            return Result.Fail(new Error(e.Message));
         }
 
-        if (!existing.Result.IsActive)
-        {
-            return Result.Fail(new Error("Auction is not active."));
-        }
-
-        if (existing.Result.EndTime < DateTime.UtcNow)
-        {
-            return Result.Fail(new Error("Auction cannot be ended before the end time."));
-        }
-
-        _auctionRepository.EndAuctionAsync(existing.Result);
         return Result.Ok();
     }
 
@@ -100,10 +138,17 @@ public class AuctionService : IAuctionService
         bool isBidAmountValid = bidAmount > auction.StartingBid && bidAmount > auction.CurrentBid;
         if (!isBidAmountValid)
         {
-            return Result.Fail(new Error("Bid amount must be greater than the starting bid and current bid."));
+            return Result.Fail(new Error(
+                $"Bid amount must be greater than the starting bid {auction.StartingBid} and current bid - {auction.CurrentBid}."));
         }
+
         await _auctionRepository.PlaceBidAsync(auction, bidder, bidAmount);
 
         return Result.Ok();
+    }
+
+    public async Task<IEnumerable<Auction>> Search(Func<Auction, bool> predicate)
+    {
+        return await _auctionRepository.Search(predicate);
     }
 }

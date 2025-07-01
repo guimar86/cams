@@ -11,6 +11,5 @@ public class Auction
     public bool IsActive { get; set; }
 
     public decimal CurrentBid { get; set; }
-    public DateTime StartTime { get; set; }
-    public DateTime EndTime { get; set; }
+    public decimal HammerPrice { get; set; }
 }

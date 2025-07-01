@@ -7,7 +7,7 @@ namespace cams.application.repositories;
 
 public class AuctionRepository : IAuctionRepository
 {
-    List<Auction> _auctions = [];
+    private static List<Auction> _auctions = [];
     private readonly IVehicleRepository _vehicleRepository;
     private readonly Dictionary<string, decimal> _startingBids;
 
@@ -24,8 +24,7 @@ public class AuctionRepository : IAuctionRepository
                                  "Vehicle repository cannot be null.");
     }
 
-    public Task<Auction> CreateAuctionAsync(Guid auctionId, Vehicle vehicle, DateTime startTime,
-        DateTime endTime, List<Bidder> bidders)
+    public Task<Auction> CreateAuctionAsync(Guid auctionId, Vehicle vehicle, List<Bidder> bidders)
     {
         Auction newAuction = new Auction
         {
@@ -35,8 +34,7 @@ public class AuctionRepository : IAuctionRepository
             Vehicle = vehicle,
             Bidders = bidders,
             IsActive = false,
-            StartTime = startTime,
-            EndTime = endTime
+            CurrentBid = GetStartingBid(vehicle.VehicleAttributes)
         };
 
         _auctions.Add(newAuction);
@@ -46,6 +44,7 @@ public class AuctionRepository : IAuctionRepository
 
     public Task EndAuctionAsync(Auction auction)
     {
+        auction.HammerPrice = auction.CurrentBid-100;//TODO: value should be configurable. Set in code for now
         auction.IsActive = false;
         return Task.CompletedTask;
     }
@@ -57,7 +56,7 @@ public class AuctionRepository : IAuctionRepository
 
     public Task PlaceBidAsync(Auction auction, Bidder bidder, decimal bidAmount)
     {
-        auction.CurrentBid = bidAmount + 100; // value should be configurable. Set in code for now
+        auction.CurrentBid = bidAmount + 100; //TODO:value should be configurable. Set in code for now
         auction.HighestBidder = bidder;
 
         return Task.CompletedTask;
@@ -65,17 +64,20 @@ public class AuctionRepository : IAuctionRepository
 
     public Task<bool> ExistingAuctionByVehicle(string vin)
     {
-        return Task.FromResult(_auctions.Any(a => a.IsActive && a.Vehicle.Vin==vin));
+        return Task.FromResult(_auctions.Any(a => a.IsActive && a.Vehicle.Vin == vin));
     }
 
-   
+    public Task<IEnumerable<Auction>> Search(Func<Auction, bool> predicate)
+    {
+        return Task.FromResult(_auctions.Where(predicate));
+    }
+
 
     public Task StartAuctionAsync(Auction auction)
     {
         auction.IsActive = true;
         return Task.CompletedTask;
     }
-
 
 
     private decimal GetStartingBid(BaseVehicleAttributes attributes)
