@@ -6,15 +6,11 @@ namespace cams.application.repositories;
 public interface IVehicleRepository
 {
     /// <summary>
-    /// Adds a new vehicle to the repository.
+    /// Adds a new vehicle to the repository asynchronously.
     /// </summary>
-    /// <param name="vin">The vehicle identification number.</param>
-    /// <param name="vehicleType">The type of the vehicle.</param>
-    /// <param name="manufacturer">The manufacturer of the vehicle.</param>
-    /// <param name="model">The model of the vehicle.</param>
-    /// <param name="year">The manufacturing year of the vehicle.</param>
-    /// <returns>The added <see cref="Vehicle"/>.</returns>
-    Task<Vehicle> AddVehicleAsync(string vin, VehicleType vehicleType, string manufacturer, string model, int year);
+    /// <param name="vehicle">The vehicle to add.</param>
+    /// <returns>The added <see cref="Vehicle"/> entity.</returns>
+    Task<Vehicle> AddVehicleAsync(Vehicle vehicle);
 
     /// <summary>
     /// Retrieves a vehicle by its VIN.

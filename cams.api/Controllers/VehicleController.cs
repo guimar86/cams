@@ -48,8 +48,30 @@ namespace cams.api.Controllers
                 return NotFound("No vehicles found.");
             }
 
-            var response = enumerable.ConvertAll(p => new GetAllVehiclesResponse(p.Vin, p.VehicleType.ToString(),
-                p.VehicleAttributes.Manufacturer, p.VehicleAttributes.Model, p.VehicleAttributes.Year));
+
+            var response = enumerable.ConvertAll(p =>
+            {
+                KeyValuePair<string, object> attribute = p.VehicleAttributes switch
+                {
+                    SedanAttributes sedan => new KeyValuePair<string, object>("NumberOfDoors", sedan.NumberOfDoors),
+                    SuvAttributes suv => new KeyValuePair<string, object>("NumberOfSeats",
+                        suv.NumberOfSeats),
+                    HatchbackAttributes hatchback => new KeyValuePair<string, object>("NumberOfDoors",
+                        hatchback.NumberOfDoors),
+                    TruckAttributes truck => new KeyValuePair<string, object>("LoadCapacity",
+                        truck.LoadCapacity),
+                    _ => new KeyValuePair<string, object>("", null)
+                };
+
+                return new GetAllVehiclesResponse(
+                    p.Vin,
+                    p.VehicleType.ToString(),
+                    p.VehicleAttributes.Manufacturer,
+                    p.VehicleAttributes.Model,
+                    p.VehicleAttributes.Year,
+                    attribute
+                );
+            });
 
             return Ok(response);
         }
@@ -79,14 +101,13 @@ namespace cams.api.Controllers
                     ((SuvAttributes)vehicle.VehicleAttributes).NumberOfSeats = request.NumberOfDoors ?? 5;
                     break;
                 case VehicleType.Truck:
-                    ((SuvAttributes)vehicle.VehicleAttributes).NumberOfSeats = request.NumberOfDoors ?? 1000;
+                    ((TruckAttributes)vehicle.VehicleAttributes).LoadCapacity = request.NumberOfDoors ?? 1000;
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(request.VehicleType),"Unsupported vehicle type.");
+                    throw new ArgumentOutOfRangeException(nameof(request.VehicleType), "Unsupported vehicle type.");
             }
 
-            var result = await _vehicleService.AddVehicleAsync(vehicle.Vin, vehicle.VehicleType, request.Manufacturer,
-                request.Model, request.Year);
+            var result = await _vehicleService.AddVehicleAsync(vehicle);
 
             if (result.IsFailed)
             {

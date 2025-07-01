@@ -19,16 +19,15 @@ public class VehicleService : IVehicleService
     }
 
     /// <inheritdoc/>
-    public async Task<Result<Vehicle>> AddVehicleAsync(string vin, VehicleType vehicleType, string manufacturer,
-        string model, int year)
+    public async Task<Result<Vehicle>> AddVehicleAsync(Vehicle vehicle)
     {
-        bool isCarInActiveAuction = await _repository.ExistsInActiveAuction(vin);
+        bool isCarInActiveAuction = await _repository.ExistsInActiveAuction(vehicle.Vin);
         if (isCarInActiveAuction)
         {
             return Result.Fail<Vehicle>(new Error("Vehicle already exists."));
         }
 
-        var vehicle = await _repository.AddVehicleAsync(vin, vehicleType, manufacturer, model, year);
+        await _repository.AddVehicleAsync(vehicle);
         return Result.Ok(vehicle);
     }
 

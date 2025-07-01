@@ -15,10 +15,8 @@ public class VehicleRepository : IVehicleRepository
     ];
 
     /// <inheritdoc/>
-    public Task<Vehicle> AddVehicleAsync(string vin, VehicleType vehicleType, string manufacturer, string model,
-        int year)
+    public Task<Vehicle> AddVehicleAsync(Vehicle vehicle)
     {
-        var vehicle = new Vehicle(vin, vehicleType, manufacturer, model, year);
         _auctionInventory.Add(vehicle);
         return Task.FromResult(vehicle);
     }
