@@ -9,15 +9,18 @@ public class AuctionRepository : IAuctionRepository
 {
     private static List<Auction> _auctions = [];
     private readonly Dictionary<string, decimal> _startingBids;
+    private readonly AuctionSettings _auctionSettings;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AuctionRepository"/> class.
     /// </summary>
     /// <param name="vehicleBidSettings">The vehicle bid settings containing starting bids configuration.</param>
+    /// <param name="auctionSettings">Settings used by auctions</param>
     /// <exception cref="ArgumentException">Thrown when starting bids configuration is missing or empty.</exception>
     /// <exception cref="ArgumentNullException">Thrown when the vehicle repository is null.</exception>
-    public AuctionRepository(IOptions<VehicleBidSettings> vehicleBidSettings)
+    public AuctionRepository(IOptions<VehicleBidSettings> vehicleBidSettings, IOptions<AuctionSettings> auctionSettings)
     {
+        _auctionSettings = auctionSettings.Value;
         _startingBids = vehicleBidSettings.Value.StartingBids;
         if (_startingBids == null || !_startingBids.Any())
         {
@@ -47,7 +50,7 @@ public class AuctionRepository : IAuctionRepository
     /// <inheritdoc/>
     public Task EndAuctionAsync(Auction auction)
     {
-        auction.HammerPrice = auction.CurrentBid - 100; //TODO: value should be configurable. Set in code for now
+        auction.HammerPrice = auction.CurrentBid - _auctionSettings.BidIncrement;
         auction.IsActive = false;
         return Task.CompletedTask;
     }
@@ -61,7 +64,7 @@ public class AuctionRepository : IAuctionRepository
     /// <inheritdoc/>
     public Task PlaceBidAsync(Auction auction, Bidder bidder, decimal bidAmount)
     {
-        auction.CurrentBid = bidAmount + 100; //TODO:value should be configurable. Set in code for now
+        auction.CurrentBid = bidAmount+_auctionSettings.BidIncrement; 
         auction.HighestBidder = bidder;
 
         return Task.CompletedTask;
