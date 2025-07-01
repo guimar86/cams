@@ -11,6 +11,7 @@ public class BidderRepository: IBidderRepository
         new Bidder(Guid.Parse("328e1812-cc63-4de1-b715-c3e4684577d5"), "John Wick")
     ];
     
+    /// <inheritdoc/>
     public Task<Bidder> CreateBidderAsync(Guid bidderId, string name)
     {
         var bidder = new Bidder(bidderId, name);
@@ -18,11 +19,13 @@ public class BidderRepository: IBidderRepository
         return Task.FromResult(bidder);
     }
 
+    /// <inheritdoc/>
     public Task<Bidder> GetBidderByIdAsync(Guid bidderId)
     {
          return Task.FromResult(Bidders.FirstOrDefault(p => p.Id == bidderId));
     }
 
+    /// <inheritdoc/>
     public Task<List<Bidder>> GetAllBiddersAsync()
     {
         return Task.FromResult(Bidders);

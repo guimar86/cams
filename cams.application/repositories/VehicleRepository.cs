@@ -14,6 +14,7 @@ public class VehicleRepository : IVehicleRepository
         new Vehicle("VIN5678901234", VehicleType.Sedan, "BMW", "3 Series", 2023)
     ];
 
+    /// <inheritdoc/>
     public Task<Vehicle> AddVehicleAsync(string vin, VehicleType vehicleType, string manufacturer, string model,
         int year)
     {
@@ -22,23 +23,26 @@ public class VehicleRepository : IVehicleRepository
         return Task.FromResult(vehicle);
     }
 
-
+    /// <inheritdoc/>
     public Task<Vehicle> GetVehicleByVinAsync(string vin)
     {
         var vehicle = _auctionInventory.FirstOrDefault(v => v.Vin == vin);
         return Task.FromResult(vehicle);
     }
 
+    /// <inheritdoc/>
     public IEnumerable<Vehicle> Search(Func<Vehicle, bool> predicate)
     {
         return _auctionInventory.Where(predicate);
     }
 
+    /// <inheritdoc/>
     public Task<bool> ExistsInActiveAuction(string vin)
     {
         return Task.FromResult(_auctionInventory.Any(v => v.Vin == vin));
     }
 
+    /// <inheritdoc/>
     public Task<List<Vehicle>> GetAllVehicles()
     {
         return Task.FromResult(_auctionInventory);

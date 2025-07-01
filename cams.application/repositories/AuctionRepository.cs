@@ -8,22 +8,24 @@ namespace cams.application.repositories;
 public class AuctionRepository : IAuctionRepository
 {
     private static List<Auction> _auctions = [];
-    private readonly IVehicleRepository _vehicleRepository;
     private readonly Dictionary<string, decimal> _startingBids;
 
-    public AuctionRepository(IVehicleRepository vehicleRepository, IOptions<VehicleBidSettings> vehicleBidSettings)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AuctionRepository"/> class.
+    /// </summary>
+    /// <param name="vehicleBidSettings">The vehicle bid settings containing starting bids configuration.</param>
+    /// <exception cref="ArgumentException">Thrown when starting bids configuration is missing or empty.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when the vehicle repository is null.</exception>
+    public AuctionRepository(IOptions<VehicleBidSettings> vehicleBidSettings)
     {
         _startingBids = vehicleBidSettings.Value.StartingBids;
         if (_startingBids == null || !_startingBids.Any())
         {
             throw new ArgumentException("Starting bids configuration is missing or empty.");
         }
-
-        _vehicleRepository = vehicleRepository ??
-                             throw new ArgumentNullException(nameof(vehicleRepository),
-                                 "Vehicle repository cannot be null.");
     }
 
+    /// <inheritdoc/>
     public Task<Auction> CreateAuctionAsync(Guid auctionId, Vehicle vehicle, List<Bidder> bidders)
     {
         Auction newAuction = new Auction
@@ -42,18 +44,21 @@ public class AuctionRepository : IAuctionRepository
         return Task.FromResult(newAuction);
     }
 
+    /// <inheritdoc/>
     public Task EndAuctionAsync(Auction auction)
     {
-        auction.HammerPrice = auction.CurrentBid-100;//TODO: value should be configurable. Set in code for now
+        auction.HammerPrice = auction.CurrentBid - 100; //TODO: value should be configurable. Set in code for now
         auction.IsActive = false;
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc/>
     public Task<Auction> GetAuctionById(Guid auctionId)
     {
         return Task.FromResult(_auctions.FirstOrDefault(a => a.Id == auctionId));
     }
 
+    /// <inheritdoc/>
     public Task PlaceBidAsync(Auction auction, Bidder bidder, decimal bidAmount)
     {
         auction.CurrentBid = bidAmount + 100; //TODO:value should be configurable. Set in code for now
@@ -62,17 +67,19 @@ public class AuctionRepository : IAuctionRepository
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc/>
     public Task<bool> ExistingAuctionByVehicle(string vin)
     {
         return Task.FromResult(_auctions.Any(a => a.IsActive && a.Vehicle.Vin == vin));
     }
 
+    /// <inheritdoc/>
     public Task<IEnumerable<Auction>> Search(Func<Auction, bool> predicate)
     {
         return Task.FromResult(_auctions.Where(predicate));
     }
 
-
+    /// <inheritdoc/>
     public Task StartAuctionAsync(Auction auction)
     {
         auction.IsActive = true;
@@ -80,6 +87,14 @@ public class AuctionRepository : IAuctionRepository
     }
 
 
+    /// <summary>
+    /// Retrieves the starting bid for a given vehicle type based on its attributes.
+    /// </summary>
+    /// <param name="attributes">The base attributes of the vehicle.</param>
+    /// <returns>The starting bid amount for the vehicle type.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if no starting bid is defined for the vehicle type.
+    /// </exception>
     private decimal GetStartingBid(BaseVehicleAttributes attributes)
     {
         var typeName = attributes.GetType().Name.Replace("Attributes", "");
