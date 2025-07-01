@@ -12,5 +12,7 @@ public interface IVehicleRepository
     
     IEnumerable<Vehicle> Search(Func<Vehicle, bool> predicate);
 
-    bool ExistsInActiveAuction(string vin);
+    Task<bool> ExistsInActiveAuction(string vin);
+    
+    Task<List<Vehicle>> GetAllVehicles();
 }

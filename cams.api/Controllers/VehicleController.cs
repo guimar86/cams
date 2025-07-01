@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using cams.api.Mappers;
 using cams.application.models;
@@ -19,15 +20,32 @@ namespace cams.api.Controllers
         {
             _vehicleService = vehicleService;
         }
+        
+        [HttpGet]
+        [Route("", Name = "GetAllVehicles")]
+        public async Task<IActionResult> GetAllVehicles()
+        {
+            var vehicles = await _vehicleService.GetAllVehicles();
+            var enumerable = vehicles.ToList();
+            if (enumerable.Count == 0)
+            {
+                return NotFound("No vehicles found.");
+            }
+
+            var response = enumerable.ConvertAll(p => new GetAllVehiclesResponse(p.Vin, p.VehicleType.ToString(),
+                p.VehicleAttributes.Manufacturer, p.VehicleAttributes.Model, p.VehicleAttributes.Year));
+            
+            return Ok(response);
+        }
 
         [HttpPost]
         [Route("", Name = "AddVehicle")]
         public async Task<IActionResult> AddVehicle([FromBody] AddVehicleRequest request)
         {
             //map request to domain model Vehicle
-            var vehicleType = EnumMapper.MapEnumByName<cams.contracts.shared.VehicleType, VehicleType>(request.vehicleType);
-            Vehicle vehicle = new Vehicle(request.vin, vehicleType, request.manufacturer, request.model, request.year);
-            var result = await _vehicleService.AddVehicleAsync(vehicle.Vin, vehicle.VehicleType, request.manufacturer, request.model, request.year);
+            var vehicleType = EnumMapper.MapEnumByName<cams.contracts.shared.VehicleType, VehicleType>(request.VehicleType);
+            Vehicle vehicle = new Vehicle(request.Vin, vehicleType, request.Manufacturer, request.Model, request.Year);
+            var result = await _vehicleService.AddVehicleAsync(vehicle.Vin, vehicle.VehicleType, request.Manufacturer, request.Model, request.Year);
 
             if (result.IsFailed)
             {
@@ -41,7 +59,7 @@ namespace cams.api.Controllers
         }
 
         [HttpGet]
-        [Route("", Name = "SearchVehicles")]
+        [Route("search", Name = "SearchVehicles")]
         public Task<IActionResult> SearchVehicles([FromQuery] string model, [FromQuery] string manufacturer, [FromQuery] int? year)
         {
             if (string.IsNullOrWhiteSpace(model) && string.IsNullOrWhiteSpace(manufacturer) && !year.HasValue)

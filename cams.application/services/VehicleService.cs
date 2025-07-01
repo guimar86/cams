@@ -16,8 +16,8 @@ public class VehicleService : IVehicleService
     public async Task<Result<Vehicle>> AddVehicleAsync(string vin, VehicleType vehicleType, string manufacturer,
         string model, int year)
     {
-        bool inActiveAuction = _repository.ExistsInActiveAuction(vin);
-        if (inActiveAuction)
+        bool isCarInActiveAuction = await _repository.ExistsInActiveAuction(vin);
+        if (isCarInActiveAuction)
         {
             return Result.Fail<Vehicle>(new Error("Vehicle already exists."));
         }
@@ -45,5 +45,10 @@ public class VehicleService : IVehicleService
         }
 
         return _repository.Search(predicate);
+    }
+
+    public async Task<List<Vehicle>> GetAllVehicles()
+    {
+        return await _repository.GetAllVehicles();
     }
 }

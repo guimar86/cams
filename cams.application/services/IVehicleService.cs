@@ -10,4 +10,6 @@ public interface IVehicleService
     Task<Result<Vehicle>> GetVehicleByVinAsync(string vin);
     
     IEnumerable<Vehicle> Search(Func<Vehicle, bool> predicate);
+    
+    Task<List<Vehicle>> GetAllVehicles();
 }
