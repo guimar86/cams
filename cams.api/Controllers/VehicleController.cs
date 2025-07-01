@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using cams.api.Mappers;
@@ -10,6 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace cams.api.Controllers
 {
+    [Produces("application/json")]
+    [Consumes("application/json")]
     [Route("vehicles")]
     [ApiController]
     public class VehicleController : ControllerBase
@@ -20,9 +23,11 @@ namespace cams.api.Controllers
         {
             _vehicleService = vehicleService;
         }
-        
+
         [HttpGet]
         [Route("", Name = "GetAllVehicles")]
+        [ProducesResponseType(typeof(GetAllVehiclesResponse), 200)]
+        [ProducesResponseType(typeof(string), 404)]
         public async Task<IActionResult> GetAllVehicles()
         {
             var vehicles = await _vehicleService.GetAllVehicles();
@@ -34,18 +39,22 @@ namespace cams.api.Controllers
 
             var response = enumerable.ConvertAll(p => new GetAllVehiclesResponse(p.Vin, p.VehicleType.ToString(),
                 p.VehicleAttributes.Manufacturer, p.VehicleAttributes.Model, p.VehicleAttributes.Year));
-            
+
             return Ok(response);
         }
 
         [HttpPost]
         [Route("", Name = "AddVehicle")]
+        [ProducesResponseType(typeof(CreateVehicleResponse), 200)]
+        [ProducesResponseType(typeof(string), 400)]
         public async Task<IActionResult> AddVehicle([FromBody] AddVehicleRequest request)
         {
             //map request to domain model Vehicle
-            var vehicleType = EnumMapper.MapEnumByName<cams.contracts.shared.VehicleType, VehicleType>(request.VehicleType);
+            var vehicleType =
+                EnumMapper.MapEnumByName<cams.contracts.shared.VehicleType, VehicleType>(request.VehicleType);
             Vehicle vehicle = new Vehicle(request.Vin, vehicleType, request.Manufacturer, request.Model, request.Year);
-            var result = await _vehicleService.AddVehicleAsync(vehicle.Vin, vehicle.VehicleType, request.Manufacturer, request.Model, request.Year);
+            var result = await _vehicleService.AddVehicleAsync(vehicle.Vin, vehicle.VehicleType, request.Manufacturer,
+                request.Model, request.Year);
 
             if (result.IsFailed)
             {
@@ -60,7 +69,10 @@ namespace cams.api.Controllers
 
         [HttpGet]
         [Route("search", Name = "SearchVehicles")]
-        public Task<IActionResult> SearchVehicles([FromQuery] string model, [FromQuery] string manufacturer, [FromQuery] int? year)
+        [ProducesResponseType(typeof(IEnumerable<Vehicle>), 200)]
+        [ProducesResponseType(typeof(string), 400)]
+        public Task<IActionResult> SearchVehicles([FromQuery] string model, [FromQuery] string manufacturer,
+            [FromQuery] int? year)
         {
             if (string.IsNullOrWhiteSpace(model) && string.IsNullOrWhiteSpace(manufacturer) && !year.HasValue)
             {
@@ -69,12 +81,13 @@ namespace cams.api.Controllers
 
 
             var vehicles = _vehicleService.Search(v =>
-                (string.IsNullOrWhiteSpace(model) || v.VehicleAttributes.Model.Contains(model, StringComparison.OrdinalIgnoreCase)) &&
-                (string.IsNullOrWhiteSpace(manufacturer) || v.VehicleAttributes.Manufacturer.Contains(manufacturer, StringComparison.OrdinalIgnoreCase)) &&
+                (string.IsNullOrWhiteSpace(model) ||
+                 v.VehicleAttributes.Model.Contains(model, StringComparison.OrdinalIgnoreCase)) &&
+                (string.IsNullOrWhiteSpace(manufacturer) ||
+                 v.VehicleAttributes.Manufacturer.Contains(manufacturer, StringComparison.OrdinalIgnoreCase)) &&
                 (!year.HasValue || v.VehicleAttributes.Year == year.Value));
 
             return Task.FromResult<IActionResult>(Ok(vehicles));
-
         }
     }
 }

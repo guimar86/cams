@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace cams.api.Controllers;
 
+[Produces("application/json")]
+[Consumes("application/json")]
 [ApiController]
 [Route("bidders")]
 public class BiddersController : ControllerBase
@@ -21,6 +23,9 @@ public class BiddersController : ControllerBase
 
     [HttpGet]
     [Route("", Name = "GetAllBidders")]
+    [ProducesResponseType(typeof(Bidder), 200)]
+    [ProducesResponseType(typeof(string), 404)]
+    [ProducesResponseType(204)]
     public async Task<IActionResult> GetAllBiddersAsync()
     {
         var bidders = await _bidderService.GetAllBiddersAsync();
@@ -28,12 +33,18 @@ public class BiddersController : ControllerBase
         {
             return NotFound(bidders.Errors);
         }
+        if (bidders.Value == null || !bidders.Value.Any())
+        {
+            return NoContent();
+        }
 
         return Ok(bidders.Value);
     }
 
     [HttpGet]
     [Route("{id}", Name = "GetBidderById")]
+    [ProducesResponseType(typeof(Bidder), 200)]
+    [ProducesResponseType(typeof(string), 404)]
     public async Task<IActionResult> GetBidderByIdAsync([FromRoute] Guid id)
     {
         var result = await _bidderService.GetBidderByIdAsync(id);
@@ -46,6 +57,9 @@ public class BiddersController : ControllerBase
     }
 
     [HttpPost]
+    [Route("", Name = "CreateBidder")]
+    [ProducesResponseType(typeof(Bidder), 200)]
+    [ProducesResponseType(typeof(string), 400)]
     public async Task<IActionResult> CreateBidderAsync([FromBody] CreateBidderRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name))

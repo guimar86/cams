@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace cams.api.Controllers;
 
+[Produces("application/json")]
+[Consumes("application/json")]
 [ApiController]
 [Route("auctions")]
 public class AuctionsController : ControllerBase
@@ -32,6 +34,7 @@ public class AuctionsController : ControllerBase
 
     [HttpGet]
     [Route("", Name = "GetAuctions")]
+    [ProducesResponseType(typeof(IEnumerable<Auction>), 200)]
     public async Task<IActionResult> GetAuctionsAsync([FromQuery] SearchAuctionRequest request)
     {
         var auctions= await _auctionService.Search(v=>
@@ -43,6 +46,8 @@ public class AuctionsController : ControllerBase
 
     [HttpPost]
     [Route("", Name = "CreateAuction")]
+    [ProducesResponseType(typeof(CreateAuctionResponse), 200)]
+    [ProducesResponseType(typeof(string), 400)]
     public async Task<IActionResult> CreateAuctionAsync([Required] [FromBody] CreateAuctionRequest request)
     {
         var vehicle = await _vehicleService.GetVehicleByVinAsync(request.Vin);
@@ -67,6 +72,8 @@ public class AuctionsController : ControllerBase
 
     [HttpPut]
     [Route("start/{auctionId}", Name = "StartAuction")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(typeof(string), 400)]
     public async Task<IActionResult> StartAuctionAsync([Required] [FromRoute] Guid auctionId)
     {
         var result = await _auctionService.StartAuctionAsync(auctionId);
@@ -81,6 +88,8 @@ public class AuctionsController : ControllerBase
 
     [HttpPut]
     [Route("end/{auctionId}", Name = "EndAuction")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(typeof(string), 400)]
     public IActionResult EndAuctionAsync([Required] [FromRoute] Guid auctionId)
     {
         var result = _auctionService.EndAuctionAsync(auctionId);
@@ -95,6 +104,8 @@ public class AuctionsController : ControllerBase
 
     [HttpPost]
     [Route("place-bid", Name = "PlaceBid")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(typeof(string), 400)]
     public async Task<IActionResult> PlaceBidAsync([Required] [FromBody] PlaceBidRequest request)
     {
         var bidder = await _bidderService.GetBidderByIdAsync(request.BidderId);
