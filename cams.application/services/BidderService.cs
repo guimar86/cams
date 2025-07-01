@@ -8,11 +8,17 @@ public class BidderService : IBidderService
 {
     private readonly IBidderRepository _bidderRepository;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BidderService"/> class.
+    /// </summary>
+    /// <param name="bidderRepository">The repository used for bidder data access.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="bidderRepository"/> is null.</exception>
     public BidderService(IBidderRepository bidderRepository)
     {
         _bidderRepository = bidderRepository ?? throw new ArgumentNullException(nameof(bidderRepository));
     }
 
+    /// <inheritdoc/>
     public async Task<Result<Bidder>> GetBidderByIdAsync(Guid bidderId)
     {
         if (bidderId == Guid.Empty)
@@ -29,6 +35,7 @@ public class BidderService : IBidderService
         return Result.Ok(bidder);
     }
 
+    /// <inheritdoc/>
     public async Task<Result<Bidder>> CreateBidderAsync(Guid bidderId, string name)
     {
         if (bidderId == Guid.Empty)
@@ -46,6 +53,7 @@ public class BidderService : IBidderService
         return Result.Ok(bidder);
     }
 
+    /// <inheritdoc/>
     public async Task<Result<List<Bidder>>> GetAllBiddersAsync()
     {
         var bidders = await _bidderRepository.GetAllBiddersAsync();

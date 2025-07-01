@@ -10,6 +10,12 @@ public class AuctionService : IAuctionService
     private readonly IAuctionRepository _auctionRepository;
     private readonly IBidderRepository _bidderRepository;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AuctionService"/> class.
+    /// </summary>
+    /// <param name="vehicleRepository">The vehicle repository.</param>
+    /// <param name="auctionRepository">The auction repository.</param>
+    /// <param name="bidderRepository">The bidder repository.</param>
     public AuctionService(IVehicleRepository vehicleRepository, IAuctionRepository auctionRepository,
         IBidderRepository bidderRepository)
     {
@@ -18,6 +24,7 @@ public class AuctionService : IAuctionService
         _bidderRepository = bidderRepository ?? throw new ArgumentNullException(nameof(bidderRepository));
     }
 
+    /// <inheritdoc/>
     public async Task<Result<Auction>> CreateAuctionAsync(Guid auctionId, Vehicle vehicle, List<Bidder> bidders)
     {
         if (bidders == null || bidders.Count == 0)
@@ -63,6 +70,7 @@ public class AuctionService : IAuctionService
         return Result.Ok(newAuction);
     }
 
+    /// <inheritdoc/>
     public async Task<Result> StartAuctionAsync(Guid auctionId)
     {
         try
@@ -96,6 +104,7 @@ public class AuctionService : IAuctionService
         return Result.Ok();
     }
 
+    /// <inheritdoc/>
     public Result EndAuctionAsync(Guid auctionId)
     {
         try
@@ -121,6 +130,7 @@ public class AuctionService : IAuctionService
         return Result.Ok();
     }
 
+    /// <inheritdoc/>
     public async Task<Result> PlaceBidAsync(Guid auctionId, Bidder bidder, decimal bidAmount)
     {
         Auction auction = await _auctionRepository.GetAuctionById(auctionId);
@@ -147,6 +157,7 @@ public class AuctionService : IAuctionService
         return Result.Ok();
     }
 
+    /// <inheritdoc/>
     public async Task<IEnumerable<Auction>> Search(Func<Auction, bool> predicate)
     {
         return await _auctionRepository.Search(predicate);
