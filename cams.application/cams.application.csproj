@@ -12,4 +12,8 @@
    
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\cams.contracts\cams.contracts.csproj" />
+  </ItemGroup>
+
 </Project>

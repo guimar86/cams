@@ -6,7 +6,7 @@ using cams.application.services;
 using cams.contracts.Requests.Bidders;
 using Microsoft.AspNetCore.Mvc;
 
-namespace  cams.api.Controllers;
+namespace cams.api.Controllers;
 
 /// <summary>
 /// Controller for managing bidders.
