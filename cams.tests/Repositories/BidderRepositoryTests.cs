@@ -5,6 +5,7 @@ using AutoFixture;
 using cams.application.models;
 using cams.application.repositories;
 using FluentAssertions;
+using NSubstitute;
 using Xunit;
 
 namespace cams.tests.Repositories
@@ -16,19 +17,24 @@ namespace cams.tests.Repositories
         [Fact]
         public async Task CreateBidderAsync_ShouldAddAndReturnBidder()
         {
-            var repo = new BidderRepository();
+            var repo = Substitute.For<IBidderRepository>();
             var id = _fixture.Create<Guid>();
             var name = _fixture.Create<string>();
+            var expected = new Bidder(id, name);
+            repo.CreateBidderAsync(id, name).Returns(expected);
             var bidder = await repo.CreateBidderAsync(id, name);
             bidder.Id.Should().Be(id);
             bidder.Name.Should().Be(name);
+            bidder.Should().NotBeNull();
         }
 
         [Fact]
         public async Task GetBidderByIdAsync_ShouldReturnBidder_WhenExists()
         {
-            var repo = new BidderRepository();
-            var id = Guid.Parse("f7d8b9fb-22ec-4ad6-a272-0540865c7b8c");
+            var repo = Substitute.For<IBidderRepository>();
+            var id = _fixture.Create<Guid>();
+            var expected = new Bidder(id, _fixture.Create<string>());
+            repo.GetBidderByIdAsync(id).Returns(expected);
             var bidder = await repo.GetBidderByIdAsync(id);
             bidder.Should().NotBeNull();
             bidder.Id.Should().Be(id);
@@ -37,7 +43,8 @@ namespace cams.tests.Repositories
         [Fact]
         public async Task GetBidderByIdAsync_ShouldReturnNull_WhenNotExists()
         {
-            var repo = new BidderRepository();
+            var repo = Substitute.For<IBidderRepository>();
+            repo.GetBidderByIdAsync(Arg.Any<Guid>()).Returns((Bidder)null);
             var bidder = await repo.GetBidderByIdAsync(_fixture.Create<Guid>());
             bidder.Should().BeNull();
         }
@@ -45,10 +52,13 @@ namespace cams.tests.Repositories
         [Fact]
         public async Task GetAllBiddersAsync_ShouldReturnAllBidders()
         {
-            var repo = new BidderRepository();
-            var bidders = await repo.GetAllBiddersAsync();
-            bidders.Should().NotBeNull();
-            bidders.Should().NotBeEmpty();
+            var repo = Substitute.For<IBidderRepository>();
+            var bidders = _fixture.CreateMany<Bidder>(3).ToList();
+            repo.GetAllBiddersAsync().Returns(bidders);
+            var result = await repo.GetAllBiddersAsync();
+            result.Should().NotBeNull();
+            result.Should().NotBeEmpty();
+            result.Should().BeEquivalentTo(bidders);
         }
     }
 }
