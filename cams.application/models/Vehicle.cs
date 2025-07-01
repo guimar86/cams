@@ -1,4 +1,5 @@
 using cams.application.factories;
+using cams.contracts.shared;
 
 namespace cams.application.models;
 

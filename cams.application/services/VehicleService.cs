@@ -1,5 +1,6 @@
 using cams.application.models;
 using cams.application.repositories;
+using cams.contracts.shared;
 using FluentResults;
 
 namespace cams.application.services;

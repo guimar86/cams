@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using cams.api.Mappers;
 using cams.application.models;
 using cams.application.services;
 using cams.contracts.Requests.Vehicles;
 using cams.contracts.Responses.Vehicles;
+using cams.contracts.shared;
 using Microsoft.AspNetCore.Mvc;
 
 namespace cams.api.Controllers
@@ -65,10 +65,26 @@ namespace cams.api.Controllers
         [ProducesResponseType(typeof(string), 400)]
         public async Task<IActionResult> AddVehicle([FromBody] AddVehicleRequest request)
         {
-            //map request to domain model Vehicle
-            var vehicleType =
-                EnumMapper.MapEnumByName<cams.contracts.shared.VehicleType, VehicleType>(request.VehicleType);
-            Vehicle vehicle = new Vehicle(request.Vin, vehicleType, request.Manufacturer, request.Model, request.Year);
+            Vehicle vehicle = new Vehicle(request.Vin, request.VehicleType, request.Manufacturer, request.Model,
+                request.Year);
+            switch (request.VehicleType)
+            {
+                case VehicleType.Hatchback:
+                    ((HatchbackAttributes)vehicle.VehicleAttributes).NumberOfDoors = request.NumberOfDoors ?? 5;
+                    break;
+                case VehicleType.Sedan:
+                    ((SedanAttributes)vehicle.VehicleAttributes).NumberOfDoors = request.NumberOfDoors ?? 4;
+                    break;
+                case VehicleType.Suv:
+                    ((SuvAttributes)vehicle.VehicleAttributes).NumberOfSeats = request.NumberOfDoors ?? 5;
+                    break;
+                case VehicleType.Truck:
+                    ((SuvAttributes)vehicle.VehicleAttributes).NumberOfSeats = request.NumberOfDoors ?? 1000;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(request.VehicleType),"Unsupported vehicle type.");
+            }
+
             var result = await _vehicleService.AddVehicleAsync(vehicle.Vin, vehicle.VehicleType, request.Manufacturer,
                 request.Model, request.Year);
 
