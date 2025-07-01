@@ -12,6 +12,7 @@ public static class ApplicationServiceExtensions
     {
         services.AddScoped<IAuctionRepository, AuctionRepository>();
         services.AddScoped<IVehicleRepository, VehicleRepository>();
+        services.AddScoped<IBidderRepository, BidderRepository>();
         services.Configure<VehicleBidSettings>(configuration.GetSection("VehicleBidSettings"));
         services.AddCamsServices();
     }
@@ -20,6 +21,7 @@ public static class ApplicationServiceExtensions
     {
         services.AddScoped<IVehicleService, VehicleService>();
         services.AddScoped<IAuctionService, AuctionService>();
+        services.AddScoped<IBidderService, BidderService>();
         return services;
     }
 }
