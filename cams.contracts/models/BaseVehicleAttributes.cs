@@ -1,4 +1,4 @@
-namespace cams.application.models;
+namespace cams.contracts.models;
 
 /// <summary>
 /// Abstract base class representing common vehicle attributes.

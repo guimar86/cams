@@ -1,6 +1,4 @@
-using System;
-
-namespace cams.application.models;
+namespace cams.contracts.models;
 
 /// <summary>
 /// Represents the attributes specific to a truck.

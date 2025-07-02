@@ -2,8 +2,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoFixture;
 using AutoFixture.Kernel;
-using cams.application.models;
 using cams.application.repositories;
+using cams.contracts.models;
 using FluentAssertions;
 using Xunit;
 
@@ -17,8 +17,8 @@ namespace cams.tests.Repositories
         {
             _fixture.Customizations.Add(
                 new TypeRelay(
-                    typeof(cams.application.models.BaseVehicleAttributes),
-                    typeof(cams.application.models.SedanAttributes)));
+                    typeof(BaseVehicleAttributes),
+                    typeof(SedanAttributes)));
         }
 
         [Fact]

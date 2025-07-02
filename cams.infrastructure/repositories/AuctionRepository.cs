@@ -1,9 +1,10 @@
-using cams.application.config;
-using cams.application.models;
-using FluentResults;
+
+using cams.contracts.Config;
+using cams.contracts.models;
+using cams.contracts.Repositories;
 using Microsoft.Extensions.Options;
 
-namespace cams.application.repositories;
+namespace cams.infrastructure.repositories;
 
 public class AuctionRepository : IAuctionRepository
 {

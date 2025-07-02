@@ -1,6 +1,6 @@
-using cams.application.models;
+using cams.contracts.models;
 
-namespace cams.application.repositories;
+namespace cams.contracts.Repositories;
 
 public interface IBidderRepository
 {

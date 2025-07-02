@@ -1,7 +1,7 @@
-using cams.application.factories;
+using cams.contracts.factories;
 using cams.contracts.shared;
 
-namespace cams.application.models;
+namespace cams.contracts.models;
 
 /// <summary>
 /// Represents a vehicle with a VIN, type, and associated attributes.

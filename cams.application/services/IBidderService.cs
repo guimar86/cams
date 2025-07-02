@@ -1,4 +1,4 @@
-using cams.application.models;
+using cams.contracts.models;
 using FluentResults;
 
 namespace cams.application.services;

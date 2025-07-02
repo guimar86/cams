@@ -1,4 +1,4 @@
-namespace cams.application.models;
+namespace cams.contracts.models;
 
 /// <summary>
 /// Represents a bidder with a unique identifier and a name.

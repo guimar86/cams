@@ -1,8 +1,8 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using cams.application.models;
 using cams.application.services;
+using cams.contracts.models;
 using cams.contracts.Requests.Bidders;
 using Microsoft.AspNetCore.Mvc;
 

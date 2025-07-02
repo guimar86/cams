@@ -1,4 +1,4 @@
-namespace cams.application.config;
+namespace cams.contracts.Config;
 
 public class AuctionSettings
 {

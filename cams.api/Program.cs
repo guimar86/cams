@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using cams.application;
+using cams.infrastructure;
 using Microsoft.OpenApi.Models;
 
 
@@ -40,6 +41,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 builder.Services.AddApplicationServices(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

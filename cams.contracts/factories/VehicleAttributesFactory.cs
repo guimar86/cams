@@ -1,7 +1,7 @@
-using cams.application.models;
+using cams.contracts.models;
 using cams.contracts.shared;
 
-namespace cams.application.factories;
+namespace cams.contracts.factories;
 
 /// <summary>
 /// Factory class for creating instances of <see cref="BaseVehicleAttributes"/> based on <see cref="VehicleType"/>.

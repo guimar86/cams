@@ -1,6 +1,6 @@
-using cams.application.config;
-using cams.application.repositories;
 using cams.application.services;
+using cams.contracts.Config;
+using cams.contracts.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,9 +15,6 @@ public static class ApplicationServiceExtensions
     /// <param name="configuration">The application configuration instance.</param>
     public static void AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddScoped<IAuctionRepository, AuctionRepository>();
-        services.AddScoped<IVehicleRepository, VehicleRepository>();
-        services.AddScoped<IBidderRepository, BidderRepository>();
         services.Configure<VehicleBidSettings>(configuration.GetSection("VehicleBidSettings"));
         services.Configure<AuctionSettings>(configuration.GetSection("AuctionSettings"));
         services.AddCamsServices();

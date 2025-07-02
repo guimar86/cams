@@ -1,4 +1,4 @@
-namespace cams.application.models;
+namespace cams.contracts.models;
 
 /// <summary>
 /// Represents an auction for a vehicle, including its details, bidders, and current state.

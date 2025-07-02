@@ -1,6 +1,4 @@
-using System;
-
-namespace cams.application.config;
+namespace cams.contracts.Config;
 
 /// <summary>
 /// Represents the bid settings for vehicles, including starting bids for each vehicle type.

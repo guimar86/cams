@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
 using AutoFixture;
-using cams.application.models;
-using cams.application.repositories;
 using cams.application.services;
+using cams.contracts.models;
+using cams.contracts.Repositories;
 using FluentAssertions;
 using NSubstitute;
 using Xunit;

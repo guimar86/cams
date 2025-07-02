@@ -1,6 +1,4 @@
-using System;
-
-namespace cams.application.models;
+namespace cams.contracts.models;
 
 /// <summary>
 /// Represents the specific attributes for a hatchback vehicle.

@@ -1,6 +1,7 @@
-using cams.application.models;
+using cams.contracts.models;
+using cams.contracts.Repositories;
 
-namespace cams.application.repositories;
+namespace cams.infrastructure.repositories;
 
 public class BidderRepository: IBidderRepository
 {
