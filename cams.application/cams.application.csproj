@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\cams.contracts\cams.contracts.csproj" />
+    <ProjectReference Include="..\cams.domain\cams.domain.csproj" />
   </ItemGroup>
 
 </Project>

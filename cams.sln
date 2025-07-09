@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cams.application", "cams.application\cams.application.csproj", "{1F847FA2-C912-41AF-A5C5-8DE3BAB7BBD7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cams.contracts", "cams.contracts\cams.contracts.csproj", "{C7ECCAAA-DCFD-44DB-9983-D04F93938AEB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cams.domain", "cams.domain\cams.domain.csproj", "{C7ECCAAA-DCFD-44DB-9983-D04F93938AEB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cams.api", "cams.api\cams.api.csproj", "{AADF7D0A-5947-4B57-819F-D3137F0DC59A}"
 EndProject
