@@ -7,4 +7,8 @@
     <RootNamespace>cams.contracts</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="factories\" />
+  </ItemGroup>
+
 </Project>
