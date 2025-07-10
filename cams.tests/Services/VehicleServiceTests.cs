@@ -23,8 +23,8 @@ namespace cams.tests.Services
         {
             _fixture.Customizations.Add(
                 new TypeRelay(
-                    typeof(BaseVehicleAttributes),
-                    typeof(SedanAttributes)));
+                    typeof(Vehicle),
+                    typeof(Sedans)));
             _service = new VehicleService(_vehicleRepository);
         }
 
@@ -32,7 +32,7 @@ namespace cams.tests.Services
         public async Task AddVehicleAsync_ShouldReturnFail_WhenVehicleExistsInActiveAuction()
         {
             var vehicle = _fixture.Create<Vehicle>();
-            _vehicleRepository.ExistsInActiveAuction(vehicle.Vin).Returns(true);
+            _vehicleRepository.ExistsInActiveAuction(vehicle.Reference).Returns(true);
             var result = await _service.AddVehicleAsync(vehicle);
             result.IsFailed.Should().BeTrue();
             result.Errors[0].Message.Should().Be("Vehicle already exists.");
@@ -42,7 +42,7 @@ namespace cams.tests.Services
         public async Task AddVehicleAsync_ShouldReturnOk_WhenVehicleDoesNotExist()
         {
             var vehicle = _fixture.Create<Vehicle>();
-            _vehicleRepository.ExistsInActiveAuction(vehicle.Vin).Returns(false);
+            _vehicleRepository.ExistsInActiveAuction(vehicle.Reference).Returns(false);
             _vehicleRepository.AddVehicleAsync(vehicle).Returns(vehicle);
             var result = await _service.AddVehicleAsync(vehicle);
             result.IsSuccess.Should().BeTrue();
@@ -61,8 +61,8 @@ namespace cams.tests.Services
         public async Task GetVehicleByVinAsync_ShouldReturnOk_WhenVehicleFound()
         {
             var vehicle = _fixture.Create<Vehicle>();
-            _vehicleRepository.GetVehicleByVinAsync(vehicle.Vin).Returns(vehicle);
-            var result = await _service.GetVehicleByVinAsync(vehicle.Vin);
+            _vehicleRepository.GetVehicleByVinAsync(vehicle.Reference).Returns(vehicle);
+            var result = await _service.GetVehicleByVinAsync(vehicle.Reference);
             result.IsSuccess.Should().BeTrue();
             result.Value.Should().Be(vehicle);
         }
@@ -73,8 +73,8 @@ namespace cams.tests.Services
             var vehicles = _fixture.CreateMany<Vehicle>(3).ToList();
             _vehicleRepository.Search(Arg.Any<Func<Vehicle, bool>>())
                 .Returns(callInfo => vehicles.Where(callInfo.Arg<Func<Vehicle, bool>>()));
-            var result = _service.Search(v => v.VehicleAttributes.Manufacturer == vehicles[0].VehicleAttributes.Manufacturer);
-            result.Should().Contain(v => v.VehicleAttributes.Manufacturer == vehicles[0].VehicleAttributes.Manufacturer);
+            var result = _service.Search(v => v.Manufacturer == vehicles[0].Manufacturer);
+            result.Should().Contain(v => v.Manufacturer == vehicles[0].Manufacturer);
         }
     }
 }

@@ -25,8 +25,8 @@ namespace cams.tests.Services
             _fixture = new Fixture();
             _fixture.Customizations.Add(
                 new TypeRelay(
-                    typeof(BaseVehicleAttributes),
-                    typeof(SedanAttributes)));
+                    typeof(Vehicle),
+                    typeof(Sedans)));
 
             _service = new AuctionService(_vehicleRepository, _auctionRepository, _bidderRepository);
         }
@@ -82,8 +82,8 @@ namespace cams.tests.Services
         {
             var bidder = SetupValidBidder();
             var vehicle = _fixture.Create<Vehicle>();
-            _vehicleRepository.GetVehicleByVinAsync(vehicle.Vin).Returns(vehicle);
-            _auctionRepository.ExistingAuctionByVehicle(vehicle.Vin).Returns(true);
+            _vehicleRepository.GetVehicleByVinAsync(vehicle.Reference).Returns(vehicle);
+            _auctionRepository.ExistingAuctionByVehicle(vehicle.Reference).Returns(true);
 
             var result = await _service.CreateAuctionAsync(Guid.NewGuid(), vehicle, new List<Bidder> { bidder });
 
@@ -101,8 +101,8 @@ namespace cams.tests.Services
                                   .With(a => a.Bidders, new List<Bidder> { bidder })
                                   .Create();
 
-            _vehicleRepository.GetVehicleByVinAsync(vehicle.Vin).Returns(vehicle);
-            _auctionRepository.ExistingAuctionByVehicle(vehicle.Vin).Returns(false);
+            _vehicleRepository.GetVehicleByVinAsync(vehicle.Reference).Returns(vehicle);
+            _auctionRepository.ExistingAuctionByVehicle(vehicle.Reference).Returns(false);
             _auctionRepository.CreateAuctionAsync(Arg.Any<Guid>(), vehicle, Arg.Any<List<Bidder>>())
                               .Returns(auction);
 
