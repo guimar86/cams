@@ -80,7 +80,7 @@ namespace cams.api.Controllers
         [ProducesResponseType(typeof(IEnumerable<Vehicle>), 200)]
         [ProducesResponseType(typeof(string), 400)]
         public ActionResult<IEnumerable<Vehicle>> SearchVehicles([FromQuery] SearchVehicleRequest request)
-        {;
+        {
             var vehicles = _vehicleService.Search(request);
             if (vehicles.IsFailed)
             {
