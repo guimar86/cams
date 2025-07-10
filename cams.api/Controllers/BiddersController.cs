@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using cams.application.services;
@@ -37,7 +38,7 @@ public class BiddersController : ControllerBase
     [ProducesResponseType(typeof(Bidder), 200)]
     [ProducesResponseType(typeof(string), 404)]
     [ProducesResponseType(204)]
-    public async Task<IActionResult> GetAllBiddersAsync()
+    public async Task<ActionResult<List<Bidder>>> GetAllBiddersAsync()
     {
         var bidders = await _bidderService.GetAllBiddersAsync();
         if (bidders.IsFailed)
@@ -62,7 +63,7 @@ public class BiddersController : ControllerBase
     [Route("{id}", Name = "GetBidderById")]
     [ProducesResponseType(typeof(Bidder), 200)]
     [ProducesResponseType(typeof(string), 404)]
-    public async Task<IActionResult> GetBidderByIdAsync([FromRoute] Guid id)
+    public async Task<ActionResult<Bidder>> GetBidderByIdAsync([FromRoute] Guid id)
     {
         var result = await _bidderService.GetBidderByIdAsync(id);
         if (result.IsFailed)
@@ -82,20 +83,15 @@ public class BiddersController : ControllerBase
     [Route("", Name = "CreateBidder")]
     [ProducesResponseType(typeof(Bidder), 200)]
     [ProducesResponseType(typeof(string), 400)]
-    public async Task<IActionResult> CreateBidderAsync([FromBody] CreateBidderRequest request)
+    public async Task<ActionResult<Bidder>> CreateBidderAsync([FromBody] CreateBidderRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Name))
-        {
-            return BadRequest("Bidder name cannot be empty.");
-        }
-
-        var bidder = new Bidder(Guid.NewGuid(), request.Name);
-        var result = await _bidderService.CreateBidderAsync(bidder.Id, bidder.Name);
+      
+        var result = await _bidderService.CreateBidderAsync(request);
         if (result.IsFailed)
         {
             return BadRequest(result.Errors.FirstOrDefault()?.Message);
         }
 
-        return Ok(bidder);
+        return Ok(result.Value);
     }
 }

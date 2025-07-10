@@ -1,5 +1,6 @@
 using cams.contracts.models;
 using cams.contracts.Repositories;
+using cams.contracts.Requests.Bidders;
 using FluentResults;
 
 namespace cams.application.services;
@@ -36,20 +37,16 @@ public class BidderService : IBidderService
     }
 
     /// <inheritdoc/>
-    public async Task<Result<Bidder>> CreateBidderAsync(Guid bidderId, string name)
+    public async Task<Result<Bidder>> CreateBidderAsync(CreateBidderRequest request)
     {
-        if (bidderId == Guid.Empty)
-        {
-            return Result.Fail<Bidder>(new Error("Bidder ID cannot be empty."));
-        }
 
-        if (string.IsNullOrWhiteSpace(name))
+        if (string.IsNullOrWhiteSpace(request.Name))
         {
             return Result.Fail<Bidder>(new Error("Bidder name cannot be empty."));
         }
 
-        var bidder = new Bidder(bidderId, name);
-        await _bidderRepository.CreateBidderAsync(bidderId, name);
+        var bidder = new Bidder(Guid.NewGuid(), request.Name);
+        await _bidderRepository.CreateBidderAsync(bidder.Id, bidder.Name);
         return Result.Ok(bidder);
     }
 
@@ -57,7 +54,7 @@ public class BidderService : IBidderService
     public async Task<Result<List<Bidder>>> GetAllBiddersAsync()
     {
         var bidders = await _bidderRepository.GetAllBiddersAsync();
-        
+
         return bidders.Any()
             ? Result.Ok(bidders)
             : Result.Fail<List<Bidder>>(new Error("No bidders found."));
