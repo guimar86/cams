@@ -1,6 +1,7 @@
 using cams.contracts.models;
 using cams.contracts.Repositories;
 using cams.contracts.Requests.Vehicles;
+using cams.contracts.Search;
 using cams.contracts.shared;
 using FluentResults;
 
@@ -45,14 +46,38 @@ public class VehicleService : IVehicleService
     }
 
     /// <inheritdoc/>
-    public IEnumerable<Vehicle> Search(Func<Vehicle, bool> predicate)
+    public Result<IEnumerable<Vehicle>> Search(SearchVehicleRequest request)
     {
-        if (predicate == null)
+        if (string.IsNullOrWhiteSpace(request.Model) && string.IsNullOrWhiteSpace(request.Manufacturer) && !request.Year.HasValue)
         {
-            throw new ArgumentNullException(nameof(predicate), "Predicate cannot be null.");
+            return Result.Fail("At least one search parameter must be provided.");
         }
 
-        return _repository.Search(predicate);
+        if (request.Year.HasValue && request.Year.ToString().Length < 4)
+        {
+            return Result.Fail(new Error("Year must be a valid 4-digit number."));
+        }
+        
+        var searches = new List<ISearch<Vehicle>>();
+
+        if (!string.IsNullOrWhiteSpace(request.Model))
+        {
+            searches.Add(new ModelSearch(request.Model));
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Manufacturer))
+        {
+            searches.Add(new ManufacturerSearch(request.Manufacturer));
+        }
+
+        if (request.Year != 0 && request.Year.HasValue)
+        {
+            searches.Add(new YearSearch(request.Year.Value));
+        }
+
+        var search = new SearchAggregator<Vehicle>(searches);
+
+        return Result.Ok(_repository.Search(search.Match));
     }
 
     /// <inheritdoc/>

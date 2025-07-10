@@ -1,13 +1,10 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using cams.application.Factory;
 using cams.application.services;
 using cams.contracts.models;
 using cams.contracts.Requests.Vehicles;
 using cams.contracts.Responses.Vehicles;
-using cams.contracts.shared;
 using Microsoft.AspNetCore.Mvc;
 
 namespace cams.api.Controllers
@@ -59,7 +56,7 @@ namespace cams.api.Controllers
         public async Task<IActionResult> AddVehicle([FromBody] AddVehicleRequest request)
         {
             Vehicle vehicle = VehicleFactory.CreateVehicle(request);
-     
+
             var result = await _vehicleService.AddVehicleAsync(vehicle);
 
             if (result.IsFailed)
@@ -84,23 +81,14 @@ namespace cams.api.Controllers
         [Route("search", Name = "SearchVehicles")]
         [ProducesResponseType(typeof(IEnumerable<Vehicle>), 200)]
         [ProducesResponseType(typeof(string), 400)]
-        public Task<IActionResult> SearchVehicles([FromQuery] string model, [FromQuery] string manufacturer,
-            [FromQuery] int? year)
-        {
-            if (string.IsNullOrWhiteSpace(model) && string.IsNullOrWhiteSpace(manufacturer) && !year.HasValue)
+        public IActionResult SearchVehicles([FromQuery] SearchVehicleRequest request)
+        {;
+            var vehicles = _vehicleService.Search(request);
+            if (vehicles.IsFailed)
             {
-                return Task.FromResult<IActionResult>(BadRequest("At least one search parameter must be provided."));
+                return BadRequest(vehicles.Errors);
             }
-
-
-            var vehicles = _vehicleService.Search(v =>
-                (string.IsNullOrWhiteSpace(model) ||
-                 v.Model.Contains(model, StringComparison.OrdinalIgnoreCase)) &&
-                (string.IsNullOrWhiteSpace(manufacturer) ||
-                 v.Manufacturer.Contains(manufacturer, StringComparison.OrdinalIgnoreCase)) &&
-                (!year.HasValue || v.Year == year.Value));
-
-            return Task.FromResult<IActionResult>(Ok(vehicles));
+            return Ok(vehicles.Value);
         }
     }
 }

@@ -1,4 +1,5 @@
 using cams.contracts.models;
+using cams.contracts.Requests.Vehicles;
 using cams.contracts.shared;
 using FluentResults;
 
@@ -25,8 +26,9 @@ public interface IVehicleService
     /// Searches for vehicles matching the specified predicate.
     /// </summary>
     /// <param name="predicate">A function to test each vehicle for a condition.</param>
+    /// <param name="request">Request</param>
     /// <returns>An enumerable of vehicles that match the predicate.</returns>
-    IEnumerable<Vehicle> Search(Func<Vehicle, bool> predicate);
+    Result<IEnumerable<Vehicle>> Search(SearchVehicleRequest request);
 
     /// <summary>
     /// Retrieves all vehicles asynchronously.
