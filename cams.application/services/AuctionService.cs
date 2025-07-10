@@ -48,13 +48,13 @@ public class AuctionService : IAuctionService
         }
         //check vehicle existence
 
-        var selectedVehicle = await _vehicleRepository.GetVehicleByVinAsync(vehicle.Vin);
+        var selectedVehicle = await _vehicleRepository.GetVehicleByVinAsync(vehicle.Reference);
         if (selectedVehicle == null)
         {
             return Result.Fail<Auction>(new Error("Invalid vehicle for auction. Vehicle must exist in the inventory."));
         }
 
-        bool isVehicleInActiveAuction = await _auctionRepository.ExistingAuctionByVehicle(vehicle.Vin);
+        bool isVehicleInActiveAuction = await _auctionRepository.ExistingAuctionByVehicle(vehicle.Reference);
         if (isVehicleInActiveAuction)
         {
             return Result.Fail<Auction>(new Error("Vehicle is already in an active auction."));
@@ -85,8 +85,8 @@ public class AuctionService : IAuctionService
                 return Result.Fail(new Error("Auction is already active."));
             }
 
-            var doesVehicleExist = await _vehicleRepository.GetVehicleByVinAsync(auction.Vehicle.Vin);
-            var isCarInActiveAuction = await _auctionRepository.ExistingAuctionByVehicle(auction.Vehicle.Vin);
+            var doesVehicleExist = await _vehicleRepository.GetVehicleByVinAsync(auction.Vehicle.Reference);
+            var isCarInActiveAuction = await _auctionRepository.ExistingAuctionByVehicle(auction.Vehicle.Reference);
             if (doesVehicleExist != null && isCarInActiveAuction)
             {
                 return Result.Fail(new Error("Vehicle is already in an active auction."));

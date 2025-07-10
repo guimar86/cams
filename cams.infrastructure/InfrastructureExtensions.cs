@@ -1,4 +1,3 @@
-using cams.application.repositories;
 using cams.contracts.Repositories;
 using cams.infrastructure.repositories;
 using Microsoft.Extensions.Configuration;

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using cams.application.Factory;
 using cams.application.services;
 using cams.contracts.models;
 using cams.contracts.Requests.Vehicles;
@@ -42,38 +43,8 @@ namespace cams.api.Controllers
         public async Task<IActionResult> GetAllVehicles()
         {
             var vehicles = await _vehicleService.GetAllVehicles();
-            var enumerable = vehicles.ToList();
-            if (enumerable.Count == 0)
-            {
-                return NotFound("No vehicles found.");
-            }
 
-
-            var response = enumerable.ConvertAll(p =>
-            {
-                KeyValuePair<string, object> attribute = p.VehicleAttributes switch
-                {
-                    SedanAttributes sedan => new KeyValuePair<string, object>("NumberOfDoors", sedan.NumberOfDoors),
-                    SuvAttributes suv => new KeyValuePair<string, object>("NumberOfSeats",
-                        suv.NumberOfSeats),
-                    HatchbackAttributes hatchback => new KeyValuePair<string, object>("NumberOfDoors",
-                        hatchback.NumberOfDoors),
-                    TruckAttributes truck => new KeyValuePair<string, object>("LoadCapacity",
-                        truck.LoadCapacity),
-                    _ => new KeyValuePair<string, object>("", null)
-                };
-
-                return new GetAllVehiclesResponse(
-                    p.Vin,
-                    p.VehicleType.ToString(),
-                    p.VehicleAttributes.Manufacturer,
-                    p.VehicleAttributes.Model,
-                    p.VehicleAttributes.Year,
-                    attribute
-                );
-            });
-
-            return Ok(response);
+            return Ok(vehicles);
         }
 
         /// <summary>
@@ -87,26 +58,8 @@ namespace cams.api.Controllers
         [ProducesResponseType(typeof(string), 400)]
         public async Task<IActionResult> AddVehicle([FromBody] AddVehicleRequest request)
         {
-            Vehicle vehicle = new Vehicle(request.Vin, request.VehicleType, request.Manufacturer, request.Model,
-                request.Year);
-            switch (request.VehicleType)
-            {
-                case VehicleType.Hatchback:
-                    ((HatchbackAttributes)vehicle.VehicleAttributes).NumberOfDoors = request.NumberOfDoors ?? 5;
-                    break;
-                case VehicleType.Sedan:
-                    ((SedanAttributes)vehicle.VehicleAttributes).NumberOfDoors = request.NumberOfDoors ?? 4;
-                    break;
-                case VehicleType.Suv:
-                    ((SuvAttributes)vehicle.VehicleAttributes).NumberOfSeats = request.NumberOfDoors ?? 5;
-                    break;
-                case VehicleType.Truck:
-                    ((TruckAttributes)vehicle.VehicleAttributes).LoadCapacity = request.NumberOfDoors ?? 1000;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(request.VehicleType), "Unsupported vehicle type.");
-            }
-
+            Vehicle vehicle = VehicleFactory.CreateVehicle(request);
+     
             var result = await _vehicleService.AddVehicleAsync(vehicle);
 
             if (result.IsFailed)
@@ -115,7 +68,7 @@ namespace cams.api.Controllers
             }
 
             //map domain model Vehicle to response model
-            var response = new CreateVehicleResponse(vehicle.Vin);
+            var response = new CreateVehicleResponse(vehicle.Reference);
 
             return Ok(response);
         }
@@ -142,10 +95,10 @@ namespace cams.api.Controllers
 
             var vehicles = _vehicleService.Search(v =>
                 (string.IsNullOrWhiteSpace(model) ||
-                 v.VehicleAttributes.Model.Contains(model, StringComparison.OrdinalIgnoreCase)) &&
+                 v.Model.Contains(model, StringComparison.OrdinalIgnoreCase)) &&
                 (string.IsNullOrWhiteSpace(manufacturer) ||
-                 v.VehicleAttributes.Manufacturer.Contains(manufacturer, StringComparison.OrdinalIgnoreCase)) &&
-                (!year.HasValue || v.VehicleAttributes.Year == year.Value));
+                 v.Manufacturer.Contains(manufacturer, StringComparison.OrdinalIgnoreCase)) &&
+                (!year.HasValue || v.Year == year.Value));
 
             return Task.FromResult<IActionResult>(Ok(vehicles));
         }

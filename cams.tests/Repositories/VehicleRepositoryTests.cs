@@ -2,8 +2,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoFixture;
 using AutoFixture.Kernel;
-using cams.application.repositories;
 using cams.contracts.models;
+using cams.infrastructure.repositories;
 using FluentAssertions;
 using Xunit;
 

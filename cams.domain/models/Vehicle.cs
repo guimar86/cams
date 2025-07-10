@@ -8,10 +8,13 @@ public abstract class Vehicle
     public string Manufacturer { get; set; }
     public int Year { get; set; }
 
-    protected Vehicle(string model, string manufacturer, int year)
+    public string Reference { get; set; }
+
+    protected Vehicle(string model, string manufacturer, int year, string reference)
     {
         Model = model;
         Manufacturer = manufacturer;
         Year = year;
+        Reference = reference;
     }
 }

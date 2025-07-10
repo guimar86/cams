@@ -1,5 +1,6 @@
 using cams.contracts.models;
 using cams.contracts.Repositories;
+using cams.contracts.Requests.Vehicles;
 using cams.contracts.shared;
 using FluentResults;
 
@@ -21,7 +22,7 @@ public class VehicleService : IVehicleService
     /// <inheritdoc/>
     public async Task<Result<Vehicle>> AddVehicleAsync(Vehicle vehicle)
     {
-        bool isCarInActiveAuction = await _repository.ExistsInActiveAuction(vehicle.Vin);
+        bool isCarInActiveAuction = await _repository.ExistsInActiveAuction(vehicle.Reference);
         if (isCarInActiveAuction)
         {
             return Result.Fail<Vehicle>(new Error("Vehicle already exists."));
@@ -59,4 +60,6 @@ public class VehicleService : IVehicleService
     {
         return await _repository.GetAllVehicles();
     }
+
+   
 }

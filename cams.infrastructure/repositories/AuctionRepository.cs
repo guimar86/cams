@@ -1,4 +1,3 @@
-
 using cams.contracts.Config;
 using cams.contracts.models;
 using cams.contracts.Repositories;
@@ -35,12 +34,12 @@ public class AuctionRepository : IAuctionRepository
         Auction newAuction = new Auction
         {
             Id = auctionId,
-            Name = $"Auction for {vehicle.VehicleAttributes.Manufacturer} {vehicle.VehicleAttributes.Model}",
-            StartingBid = GetStartingBid(vehicle.VehicleAttributes),
+            Name = $"Auction for {vehicle.Manufacturer} {vehicle.Model}",
+            StartingBid = GetStartingBid(vehicle),
             Vehicle = vehicle,
             Bidders = bidders,
             IsActive = false,
-            CurrentBid = GetStartingBid(vehicle.VehicleAttributes)
+            CurrentBid = GetStartingBid(vehicle)
         };
 
         _auctions.Add(newAuction);
@@ -65,7 +64,7 @@ public class AuctionRepository : IAuctionRepository
     /// <inheritdoc/>
     public Task PlaceBidAsync(Auction auction, Bidder bidder, decimal bidAmount)
     {
-        auction.CurrentBid = bidAmount+_auctionSettings.BidIncrement; 
+        auction.CurrentBid = bidAmount + _auctionSettings.BidIncrement;
         auction.HighestBidder = bidder;
 
         return Task.CompletedTask;
@@ -74,7 +73,7 @@ public class AuctionRepository : IAuctionRepository
     /// <inheritdoc/>
     public Task<bool> ExistingAuctionByVehicle(string vin)
     {
-        return Task.FromResult(_auctions.Any(a => a.IsActive && a.Vehicle.Vin == vin));
+        return Task.FromResult(_auctions.Any(a => a.IsActive && a.Vehicle.Reference == vin));
     }
 
     /// <inheritdoc/>
@@ -92,16 +91,14 @@ public class AuctionRepository : IAuctionRepository
 
 
     /// <summary>
-    /// Retrieves the starting bid for a given vehicle type based on its attributes.
+    /// Get starting bid for a vehicle based on its type.
     /// </summary>
-    /// <param name="attributes">The base attributes of the vehicle.</param>
-    /// <returns>The starting bid amount for the vehicle type.</returns>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown if no starting bid is defined for the vehicle type.
-    /// </exception>
-    private decimal GetStartingBid(BaseVehicleAttributes attributes)
+    /// <param name="vehicle"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    private decimal GetStartingBid(Vehicle vehicle)
     {
-        var typeName = attributes.GetType().Name.Replace("Attributes", "");
+        var typeName = vehicle.GetType().Name;
 
         if (_startingBids.TryGetValue(typeName, out var bid))
             return bid;

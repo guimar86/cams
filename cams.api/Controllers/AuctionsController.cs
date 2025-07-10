@@ -54,7 +54,7 @@ public class AuctionsController : ControllerBase
         var auctions = await _auctionService.Search(v =>
             (request.AuctionId == Guid.Empty || v.Id == request.AuctionId) &&
             (string.IsNullOrEmpty(request.Vin) ||
-             v.Vehicle.Vin.Equals(request.Vin, StringComparison.OrdinalIgnoreCase)));
+             v.Vehicle.Reference.Equals(request.Vin, StringComparison.OrdinalIgnoreCase)));
 
         return Ok(auctions);
     }

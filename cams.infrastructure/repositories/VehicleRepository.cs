@@ -1,18 +1,17 @@
 using cams.contracts.models;
 using cams.contracts.Repositories;
-using cams.contracts.shared;
 
-namespace cams.application.repositories;
+namespace cams.infrastructure.repositories;
 
 public class VehicleRepository : IVehicleRepository
 {
     private static List<Vehicle> _auctionInventory =
     [
-        new Vehicle("VIN1234567890", VehicleType.Sedan, "Toyota", "Camry", 2020),
-        new Vehicle("VIN2345678901", VehicleType.Suv, "Honda", "CR-V", 2021),
-        new Vehicle("VIN3456789012", VehicleType.Hatchback, "Volkswagen", "Golf", 2019),
-        new Vehicle("VIN4567890123", VehicleType.Truck, "Ford", "F-150", 2022),
-        new Vehicle("VIN5678901234", VehicleType.Sedan, "BMW", "3 Series", 2023)
+        new Sedans(vin:"VIN1234567890",  manufacturer:"Toyota", model:"Camry", year:2020,numberOfDoors:5),
+        new Suv(vin:"VIN1234567890",  manufacturer:"Toyota", model:"Camry", year:2020,numberOfSeats:5),
+        new Truck(vin:"VIN1234567890",  manufacturer:"Toyota", model:"Hylux", year:2020,loadCapacity:520),
+        new Hatchback(vin:"VIN1234567890",  manufacturer:"Toyota", model:"Camry", year:2020,numberOfDoors:5),
+       
     ];
 
     /// <inheritdoc/>
@@ -25,7 +24,7 @@ public class VehicleRepository : IVehicleRepository
     /// <inheritdoc/>
     public Task<Vehicle> GetVehicleByVinAsync(string vin)
     {
-        var vehicle = _auctionInventory.FirstOrDefault(v => v.Vin == vin);
+        var vehicle = _auctionInventory.FirstOrDefault(v => v.Reference == vin);
         return Task.FromResult(vehicle);
     }
 
@@ -38,7 +37,7 @@ public class VehicleRepository : IVehicleRepository
     /// <inheritdoc/>
     public Task<bool> ExistsInActiveAuction(string vin)
     {
-        return Task.FromResult(_auctionInventory.Any(v => v.Vin == vin));
+        return Task.FromResult(_auctionInventory.Any(v => v.Reference == vin));
     }
 
     /// <inheritdoc/>
