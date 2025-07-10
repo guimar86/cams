@@ -53,11 +53,11 @@ namespace cams.api.Controllers
         [Route("", Name = "AddVehicle")]
         [ProducesResponseType(typeof(CreateVehicleResponse), 200)]
         [ProducesResponseType(typeof(string), 400)]
-        public async Task<IActionResult> AddVehicle([FromBody] AddVehicleRequest request)
+        public async Task<ActionResult<CreateVehicleResponse>> AddVehicle([FromBody] AddVehicleRequest request)
         {
-            Vehicle vehicle = VehicleFactory.CreateVehicle(request);
+            
 
-            var result = await _vehicleService.AddVehicleAsync(vehicle);
+            var result = await _vehicleService.AddVehicleAsync(request);
 
             if (result.IsFailed)
             {
@@ -65,7 +65,7 @@ namespace cams.api.Controllers
             }
 
             //map domain model Vehicle to response model
-            var response = new CreateVehicleResponse(vehicle.Reference);
+            var response = new CreateVehicleResponse(result.Value.Reference);
 
             return Ok(response);
         }
@@ -73,15 +73,13 @@ namespace cams.api.Controllers
         /// <summary>
         /// Searches for vehicles by model, manufacturer, or year.
         /// </summary>
-        /// <param name="model">The vehicle model to search for.</param>
-        /// <param name="manufacturer">The vehicle manufacturer to search for.</param>
-        /// <param name="year">The vehicle year to search for.</param>
+        /// <param name="request">Request object with search parameters such as: model, manufacturer.</param>
         /// <returns>A list of vehicles matching the search criteria or 400 if no parameters provided.</returns>
         [HttpGet]
         [Route("search", Name = "SearchVehicles")]
         [ProducesResponseType(typeof(IEnumerable<Vehicle>), 200)]
         [ProducesResponseType(typeof(string), 400)]
-        public IActionResult SearchVehicles([FromQuery] SearchVehicleRequest request)
+        public ActionResult<IEnumerable<Vehicle>> SearchVehicles([FromQuery] SearchVehicleRequest request)
         {;
             var vehicles = _vehicleService.Search(request);
             if (vehicles.IsFailed)

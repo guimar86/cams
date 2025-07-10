@@ -1,6 +1,9 @@
+using cams.application.Factory;
+using cams.application.Mappers;
 using cams.contracts.models;
 using cams.contracts.Repositories;
 using cams.contracts.Requests.Vehicles;
+using cams.contracts.Responses.Vehicles;
 using cams.contracts.Search;
 using cams.contracts.shared;
 using FluentResults;
@@ -21,10 +24,13 @@ public class VehicleService : IVehicleService
     }
 
     /// <inheritdoc/>
-    public async Task<Result<Vehicle>> AddVehicleAsync(Vehicle vehicle)
+    public async Task<Result<Vehicle>> AddVehicleAsync(AddVehicleRequest request)
     {
-        bool isCarInActiveAuction = await _repository.ExistsInActiveAuction(vehicle.Reference);
-        if (isCarInActiveAuction)
+        Vehicle vehicle = VehicleFactory.CreateVehicle(request);
+
+        //does the vehicle already exist in the system?
+        var vehicleExists = await _repository.GetVehicleByVinAsync(vehicle.Reference);
+        if (vehicleExists != null)
         {
             return Result.Fail<Vehicle>(new Error("Vehicle already exists."));
         }
@@ -46,7 +52,7 @@ public class VehicleService : IVehicleService
     }
 
     /// <inheritdoc/>
-    public Result<IEnumerable<Vehicle>> Search(SearchVehicleRequest request)
+    public Result<IEnumerable<VehicleResponse>> Search(SearchVehicleRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Model) && string.IsNullOrWhiteSpace(request.Manufacturer) && !request.Year.HasValue)
         {
@@ -57,7 +63,7 @@ public class VehicleService : IVehicleService
         {
             return Result.Fail(new Error("Year must be a valid 4-digit number."));
         }
-        
+
         var searches = new List<ISearch<Vehicle>>();
 
         if (!string.IsNullOrWhiteSpace(request.Model))
@@ -77,14 +83,18 @@ public class VehicleService : IVehicleService
 
         var search = new SearchAggregator<Vehicle>(searches);
 
-        return Result.Ok(_repository.Search(search.Match));
+        var result = _repository.Search(search.Match);
+        var response= result.Select(v => v.ToResponse());
+        return Result.Ok(response);
     }
 
     /// <inheritdoc/>
-    public async Task<List<Vehicle>> GetAllVehicles()
+    public async Task<IEnumerable<VehicleResponse>> GetAllVehicles()
     {
-        return await _repository.GetAllVehicles();
+        var vehicles = await _repository.GetAllVehicles();
+
+        return vehicles.Select(v => v.ToResponse());
     }
 
-   
+
 }
