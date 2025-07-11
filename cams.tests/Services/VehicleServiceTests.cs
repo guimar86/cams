@@ -34,7 +34,7 @@ namespace cams.tests.Services
         public async Task AddVehicleAsync_ShouldReturnFail_WhenVehicleExists()
         {
             var vehicle = _fixture.Create<Vehicle>();
-            _vehicleRepository.GetVehicleByVinAsync(vehicle.Reference).Returns(vehicle);
+            _vehicleRepository.GetVehicleByVinAsync(Arg.Any<string>()).Returns(vehicle);
             var result = await _service.AddVehicleAsync(_fixture.Create<AddVehicleRequest>());
             result.IsFailed.Should().BeTrue();
             result.Errors[0].Message.Should().Be("Vehicle already exists.");
