@@ -1,5 +1,7 @@
 using cams.contracts.models;
 using cams.contracts.Repositories;
+using cams.contracts.Requests.Auctions;
+using cams.contracts.Search;
 using FluentResults;
 
 namespace cams.application.services;
@@ -25,42 +27,52 @@ public class AuctionService : IAuctionService
     }
 
     /// <inheritdoc/>
-    public async Task<Result<Auction>> CreateAuctionAsync(Guid auctionId, Vehicle vehicle, List<Bidder> bidders)
+    public async Task<Result<Auction>> CreateAuctionAsync(CreateAuctionRequest request)
     {
-        if (bidders == null || bidders.Count == 0)
+        if (request.Bidders == null || request.Bidders.Count == 0)
         {
             return Result.Fail<Auction>(new Error("At least one bidder must be registered for the auction."));
         }
 
         //check bidders existence
-        if (bidders.Any(b => b == null || b.Id == Guid.Empty || string.IsNullOrWhiteSpace(b.Name)))
+        if (request.Bidders.Any(b => b.Equals(Guid.Empty)))
         {
             return Result.Fail<Auction>(new Error("All bidders must have a valid ID and name."));
         }
 
-        foreach (var bidder in bidders)
+        bool anyInvalidBidder = false;
+        List<Bidder> bidders = [];
+        foreach (var bidder in request.Bidders)
         {
-            var existingBidder = await _bidderRepository.GetBidderByIdAsync(bidder.Id);
-            if (existingBidder == null)
+            var bidderEntity = await _bidderRepository.GetBidderByIdAsync(bidder);
+            if (bidderEntity == null)
             {
-                return Result.Fail<Auction>(new Error($"Bidder with ID {bidder.Id} does not exist."));
+                anyInvalidBidder = true;
+                break;
             }
+            bidders.Add(bidderEntity);
+
+        }
+
+        if (anyInvalidBidder)
+        {
+            return Result.Fail<Auction>(new Error($"Bidder with ID {anyInvalidBidder} does not exist."));
         }
         //check vehicle existence
 
-        var selectedVehicle = await _vehicleRepository.GetVehicleByVinAsync(vehicle.Reference);
+        var selectedVehicle = await _vehicleRepository.GetVehicleByVinAsync(request.Vin);
         if (selectedVehicle == null)
         {
             return Result.Fail<Auction>(new Error("Invalid vehicle for auction. Vehicle must exist in the inventory."));
         }
 
-        bool isVehicleInActiveAuction = await _auctionRepository.ExistingAuctionByVehicle(vehicle.Reference);
+        bool isVehicleInActiveAuction = await _auctionRepository.ExistingAuctionByVehicle(request.Vin);
         if (isVehicleInActiveAuction)
         {
             return Result.Fail<Auction>(new Error("Vehicle is already in an active auction."));
         }
 
-        var newAuction = await _auctionRepository.CreateAuctionAsync(auctionId, vehicle, bidders);
+        var newAuction = await _auctionRepository.CreateAuctionAsync(Guid.NewGuid(), selectedVehicle, bidders);
         if (newAuction == null)
         {
             return Result.Fail<Auction>(new Error("Failed to create auction. Please try again."));
@@ -130,11 +142,13 @@ public class AuctionService : IAuctionService
     }
 
     /// <inheritdoc/>
-    public async Task<Result> PlaceBidAsync(Guid auctionId, Bidder bidder, decimal bidAmount)
+    public async Task<Result> PlaceBidAsync(PlaceBidRequest request)
     {
-        Auction auction = await _auctionRepository.GetAuctionById(auctionId);
 
-        if (auction == null || auction.IsActive == false)
+        Auction auction = await _auctionRepository.GetAuctionById(request.AuctionId);
+        Bidder bidder = await _bidderRepository.GetBidderByIdAsync(request.BidderId);
+
+        if (auction == null || !auction.IsActive)
         {
             return Result.Fail(new Error("Auction not found or not active."));
         }
@@ -144,21 +158,38 @@ public class AuctionService : IAuctionService
             return Result.Fail(new Error("Bidder is not registered for this auction."));
         }
 
-        bool isBidAmountValid = bidAmount > auction.StartingBid && bidAmount > auction.CurrentBid;
+        bool isBidAmountValid = request.BidAmount > auction.StartingBid && request.BidAmount > auction.CurrentBid;
         if (!isBidAmountValid)
         {
             return Result.Fail(new Error(
                 $"Bid amount must be greater than the starting bid {auction.StartingBid} and current bid - {auction.CurrentBid}."));
         }
 
-        await _auctionRepository.PlaceBidAsync(auction, bidder, bidAmount);
+        await _auctionRepository.PlaceBidAsync(auction, bidder, request.BidAmount);
 
         return Result.Ok();
     }
 
     /// <inheritdoc/>
-    public async Task<IEnumerable<Auction>> Search(Func<Auction, bool> predicate)
+    public async Task<Result<IEnumerable<Auction>>> Search(SearchAuctionRequest request)
     {
-        return await _auctionRepository.Search(predicate);
+        var searches = new List<ISearch<Auction>>();
+
+        if (request.AuctionId != Guid.Empty)
+        {
+            searches.Add(new AuctionIdSearch(request.AuctionId));
+        }
+        if (!string.IsNullOrWhiteSpace(request.Vin))
+        {
+            searches.Add(new VinSearch(request.Vin));
+        }
+
+        var search = new SearchAggregator<Auction>(searches);
+
+        var result = await _auctionRepository.Search(search.Match);
+
+        return Result.Ok(result);
     }
+
+
 }

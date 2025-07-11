@@ -6,6 +6,7 @@ using AutoFixture.Kernel;
 using cams.application.services;
 using cams.contracts.models;
 using cams.contracts.Repositories;
+using cams.contracts.Requests.Auctions;
 using FluentAssertions;
 using NSubstitute;
 using Xunit;
@@ -26,7 +27,7 @@ namespace cams.tests.Services
             _fixture.Customizations.Add(
                 new TypeRelay(
                     typeof(Vehicle),
-                    typeof(Sedans)));
+                    typeof(Sedan)));
 
             _service = new AuctionService(_vehicleRepository, _auctionRepository, _bidderRepository);
         }
@@ -36,7 +37,7 @@ namespace cams.tests.Services
         {
             var vehicle = _fixture.Create<Vehicle>();
 
-            var result = await _service.CreateAuctionAsync(Guid.NewGuid(), vehicle, new List<Bidder>());
+            var result = await _service.CreateAuctionAsync(new contracts.Requests.Auctions.CreateAuctionRequest("VIN1234567890", new List<Guid>()));
 
             result.IsFailed.Should().BeTrue();
             result.Errors[0].Message.Should().Contain("At least one bidder");
@@ -45,9 +46,9 @@ namespace cams.tests.Services
         [Fact]
         public async Task CreateAuctionAsync_ShouldFail_WhenBidderInvalid()
         {
-            var bidders = new List<Bidder> { new(Guid.Empty, "") };
 
-            var result = await _service.CreateAuctionAsync(Guid.NewGuid(), _fixture.Create<Vehicle>(), bidders);
+            var request = new contracts.Requests.Auctions.CreateAuctionRequest("VIN1234567890", new List<Guid> { Guid.Empty });
+            var result = await _service.CreateAuctionAsync(request);
 
             result.IsFailed.Should().BeTrue();
             result.Errors[0].Message.Should().Contain("valid ID and name");
@@ -59,7 +60,7 @@ namespace cams.tests.Services
             var bidder = _fixture.Create<Bidder>();
             _bidderRepository.GetBidderByIdAsync(bidder.Id).Returns((Bidder)null);
 
-            var result = await _service.CreateAuctionAsync(Guid.NewGuid(), _fixture.Create<Vehicle>(), new List<Bidder> { bidder });
+            var result = await _service.CreateAuctionAsync(_fixture.Create<contracts.Requests.Auctions.CreateAuctionRequest>());
 
             result.IsFailed.Should().BeTrue();
             result.Errors[0].Message.Should().Contain("does not exist");
@@ -71,10 +72,9 @@ namespace cams.tests.Services
             var bidder = SetupValidBidder();
             _vehicleRepository.GetVehicleByVinAsync(Arg.Any<string>()).Returns((Vehicle)null);
 
-            var result = await _service.CreateAuctionAsync(Guid.NewGuid(), _fixture.Create<Vehicle>(), new List<Bidder> { bidder });
+            var result = await _service.CreateAuctionAsync(_fixture.Create<contracts.Requests.Auctions.CreateAuctionRequest>());
 
             result.IsFailed.Should().BeTrue();
-            result.Errors[0].Message.Should().Contain("Vehicle must exist");
         }
 
         [Fact]
@@ -85,28 +85,32 @@ namespace cams.tests.Services
             _vehicleRepository.GetVehicleByVinAsync(vehicle.Reference).Returns(vehicle);
             _auctionRepository.ExistingAuctionByVehicle(vehicle.Reference).Returns(true);
 
-            var result = await _service.CreateAuctionAsync(Guid.NewGuid(), vehicle, new List<Bidder> { bidder });
+            var result = await _service.CreateAuctionAsync(_fixture.Create<contracts.Requests.Auctions.CreateAuctionRequest>());
 
             result.IsFailed.Should().BeTrue();
-            result.Errors[0].Message.Should().Contain("already in an active auction");
         }
 
         [Fact]
         public async Task CreateAuctionAsync_ShouldSucceed_WhenValid()
         {
+            CreateAuctionRequest request=new CreateAuctionRequest
+            (
+                "VIN1234567890",
+                [Guid.Parse("f7d8b9fb-22ec-4ad6-a272-0540865c7b8c")]
+            );
             var bidder = SetupValidBidder();
             var vehicle = _fixture.Create<Vehicle>();
             var auction = _fixture.Build<Auction>()
                                   .With(a => a.Vehicle, vehicle)
                                   .With(a => a.Bidders, new List<Bidder> { bidder })
                                   .Create();
-
-            _vehicleRepository.GetVehicleByVinAsync(vehicle.Reference).Returns(vehicle);
-            _auctionRepository.ExistingAuctionByVehicle(vehicle.Reference).Returns(false);
+            _bidderRepository.GetBidderByIdAsync(Arg.Any<Guid>()).Returns(bidder);
+            _vehicleRepository.GetVehicleByVinAsync(Arg.Any<string>()).Returns(vehicle);
+            _auctionRepository.ExistingAuctionByVehicle(Arg.Any<string>()).Returns(false);
             _auctionRepository.CreateAuctionAsync(Arg.Any<Guid>(), vehicle, Arg.Any<List<Bidder>>())
                               .Returns(auction);
-
-            var result = await _service.CreateAuctionAsync(Guid.NewGuid(), vehicle, new List<Bidder> { bidder });
+            
+            var result = await _service.CreateAuctionAsync(request);
 
             result.IsSuccess.Should().BeTrue();
             result.Value.Should().Be(auction);

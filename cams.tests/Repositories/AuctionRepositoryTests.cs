@@ -21,7 +21,7 @@ namespace cams.tests.Repositories
             _fixture.Customizations.Add(
                 new TypeRelay(
                     typeof(Vehicle),
-                    typeof(Sedans)));
+                    typeof(Sedan)));
         }
         [Fact]
         public async Task CreateAuctionAsync_ShouldAddAuction()
