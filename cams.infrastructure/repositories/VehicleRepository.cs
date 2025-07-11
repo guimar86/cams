@@ -7,10 +7,10 @@ public class VehicleRepository : IVehicleRepository
 {
     private static List<Vehicle> _auctionInventory =
     [
-        new Sedans(vin:"VIN1234567890",  manufacturer:"Toyota", model:"Camry", year:2020,numberOfDoors:5),
-        new Suv(vin:"VIN1234567890",  manufacturer:"Toyota", model:"Camry", year:2020,numberOfSeats:5),
-        new Truck(vin:"VIN1234567890",  manufacturer:"Toyota", model:"Hylux", year:2020,loadCapacity:520),
-        new Hatchback(vin:"VIN1234567890",  manufacturer:"Toyota", model:"Camry", year:2020,numberOfDoors:5),
+        new Sedan(vin:"VIN1234567890",  manufacturer:"Toyota", model:"Camry", year:2020,numberOfDoors:5),
+        new Suv(vin:"VIN1234567891",  manufacturer:"Toyota", model:"Camry", year:2020,numberOfSeats:5),
+        new Truck(vin:"VIN1234567892",  manufacturer:"Toyota", model:"Hylux", year:2020,loadCapacity:520),
+        new Hatchback(vin:"VIN1234567893",  manufacturer:"Toyota", model:"Camry", year:2020,numberOfDoors:5),
        
     ];
 

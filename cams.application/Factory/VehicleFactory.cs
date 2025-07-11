@@ -12,7 +12,7 @@ public static class VehicleFactory
         {
             VehicleType.Hatchback => new Hatchback(request.Manufacturer, request.Model, request.Year, request.Vin,
                 request.NumberOfDoors),
-            VehicleType.Sedan => new Sedans(request.Manufacturer, request.Model, request.Year, request.Vin,
+            VehicleType.Sedan => new Sedan(request.Manufacturer, request.Model, request.Year, request.Vin,
                 request.NumberOfDoors),
             VehicleType.Suv => new Suv(request.Manufacturer, request.Model, request.Year, request.Vin,
                 request.NumberOfSeats),
