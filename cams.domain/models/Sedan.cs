@@ -1,9 +1,9 @@
 namespace cams.contracts.models;
 
-public class Sedans: Car
+public class Sedan: Car
 {
     public int NumberOfDoors { get; set; }
-    public Sedans(string manufacturer, string model, int year, string vin,int? numberOfDoors) : base(manufacturer, model, year, vin)
+    public Sedan(string manufacturer, string model, int year, string vin,int? numberOfDoors) : base(manufacturer, model, year, vin)
     {
         Manufacturer = manufacturer;
         Model = model;
