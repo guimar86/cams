@@ -4,6 +4,7 @@ using AutoFixture;
 using cams.application.services;
 using cams.contracts.models;
 using cams.contracts.Repositories;
+using cams.contracts.Requests.Bidders;
 using FluentAssertions;
 using NSubstitute;
 using Xunit;
@@ -49,17 +50,10 @@ namespace cams.tests.Services
         }
 
         [Fact]
-        public async Task CreateBidderAsync_ShouldReturnFail_WhenIdIsEmpty()
-        {
-            var result = await _service.CreateBidderAsync(Guid.Empty, "Test");
-            result.IsFailed.Should().BeTrue();
-            result.Errors[0].Message.Should().Be("Bidder ID cannot be empty.");
-        }
-
-        [Fact]
         public async Task CreateBidderAsync_ShouldReturnFail_WhenNameIsEmpty()
         {
-            var result = await _service.CreateBidderAsync(_fixture.Create<Guid>(), "");
+            var request = new CreateBidderRequest(string.Empty);
+            var result = await _service.CreateBidderAsync(request);
             result.IsFailed.Should().BeTrue();
             result.Errors[0].Message.Should().Be("Bidder name cannot be empty.");
         }
