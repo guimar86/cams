@@ -1,5 +1,10 @@
+using cams.application.Factory;
+using cams.application.Mappers;
 using cams.contracts.models;
 using cams.contracts.Repositories;
+using cams.contracts.Requests.Vehicles;
+using cams.contracts.Responses.Vehicles;
+using cams.contracts.Search;
 using cams.contracts.shared;
 using FluentResults;
 
@@ -19,10 +24,13 @@ public class VehicleService : IVehicleService
     }
 
     /// <inheritdoc/>
-    public async Task<Result<Vehicle>> AddVehicleAsync(Vehicle vehicle)
+    public async Task<Result<Vehicle>> AddVehicleAsync(AddVehicleRequest request)
     {
-        bool isCarInActiveAuction = await _repository.ExistsInActiveAuction(vehicle.Vin);
-        if (isCarInActiveAuction)
+        Vehicle vehicle = VehicleFactory.CreateVehicle(request);
+
+        //does the vehicle already exist in the system?
+        var vehicleExists = await _repository.GetVehicleByVinAsync(vehicle.Reference);
+        if (vehicleExists != null)
         {
             return Result.Fail<Vehicle>(new Error("Vehicle already exists."));
         }
@@ -44,19 +52,49 @@ public class VehicleService : IVehicleService
     }
 
     /// <inheritdoc/>
-    public IEnumerable<Vehicle> Search(Func<Vehicle, bool> predicate)
+    public Result<IEnumerable<VehicleResponse>> Search(SearchVehicleRequest request)
     {
-        if (predicate == null)
+        if (string.IsNullOrWhiteSpace(request.Model) && string.IsNullOrWhiteSpace(request.Manufacturer) && !request.Year.HasValue)
         {
-            throw new ArgumentNullException(nameof(predicate), "Predicate cannot be null.");
+            return Result.Fail("At least one search parameter must be provided.");
         }
 
-        return _repository.Search(predicate);
+        if (request.Year.HasValue && request.Year.ToString().Length < 4)
+        {
+            return Result.Fail(new Error("Year must be a valid 4-digit number."));
+        }
+
+        var searches = new List<ISearch<Vehicle>>();
+
+        if (!string.IsNullOrWhiteSpace(request.Model))
+        {
+            searches.Add(new ModelSearch(request.Model));
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Manufacturer))
+        {
+            searches.Add(new ManufacturerSearch(request.Manufacturer));
+        }
+
+        if (request.Year != 0 && request.Year.HasValue)
+        {
+            searches.Add(new YearSearch(request.Year.Value));
+        }
+
+        var search = new SearchAggregator<Vehicle>(searches);
+
+        var result = _repository.Search(search.Match);
+        var response= result.Select(v => v.ToResponse());
+        return Result.Ok(response);
     }
 
     /// <inheritdoc/>
-    public async Task<List<Vehicle>> GetAllVehicles()
+    public async Task<IEnumerable<VehicleResponse>> GetAllVehicles()
     {
-        return await _repository.GetAllVehicles();
+        var vehicles = await _repository.GetAllVehicles();
+
+        return vehicles.Select(v => v.ToResponse());
     }
+
+
 }

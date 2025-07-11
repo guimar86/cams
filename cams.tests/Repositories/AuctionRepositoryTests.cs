@@ -20,8 +20,8 @@ namespace cams.tests.Repositories
         {
             _fixture.Customizations.Add(
                 new TypeRelay(
-                    typeof(BaseVehicleAttributes),
-                    typeof(SedanAttributes)));
+                    typeof(Vehicle),
+                    typeof(Sedan)));
         }
         [Fact]
         public async Task CreateAuctionAsync_ShouldAddAuction()
@@ -88,8 +88,8 @@ namespace cams.tests.Repositories
             var bidders = _fixture.CreateMany<Bidder>(2).ToList();
             var expected = new List<Auction> { new Auction { Id = auctionId, Vehicle = vehicle, Bidders = bidders } };
             repo.Search(Arg.Any<Func<Auction, bool>>()).Returns(expected);
-            var results = await repo.Search(a => a.Vehicle.Vin == vehicle.Vin);
-            results.Should().ContainSingle(a => a.Vehicle.Vin == vehicle.Vin);
+            var results = await repo.Search(a => a.Vehicle.Reference == vehicle.Reference);
+            results.Should().ContainSingle(a => a.Vehicle.Reference == vehicle.Reference);
         }
 
         [Fact]

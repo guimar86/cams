@@ -1,4 +1,5 @@
 using cams.contracts.models;
+using cams.contracts.Requests.Bidders;
 using FluentResults;
 
 namespace cams.application.services;
@@ -15,10 +16,9 @@ public interface IBidderService
     /// <summary>
     /// Creates a new bidder with the specified ID and name.
     /// </summary>
-    /// <param name="bidderId">The unique identifier for the new bidder.</param>
-    /// <param name="name">The name of the bidder.</param>
+    /// <param name="request">The request containing the bidder details.</param>
     /// <returns>A result containing the created bidder or an error.</returns>
-    Task<Result<Bidder>> CreateBidderAsync(Guid bidderId, string name);
+    Task<Result<Bidder>> CreateBidderAsync(CreateBidderRequest request);
 
     /// <summary>
     /// Retrieves all registered bidders.

@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\cams.application\cams.application.csproj" />
-    <ProjectReference Include="..\cams.contracts\cams.contracts.csproj" />
+    <ProjectReference Include="..\cams.domain\cams.domain.csproj" />
     <ProjectReference Include="..\cams.infrastructure\cams.infrastructure.csproj" />
   </ItemGroup>
 

@@ -4,6 +4,11 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
+    <RootNamespace>cams.contracts</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="factories\" />
+  </ItemGroup>
 
 </Project>

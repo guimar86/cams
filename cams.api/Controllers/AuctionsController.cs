@@ -20,8 +20,6 @@ namespace cams.api.Controllers;
 public class AuctionsController : ControllerBase
 {
     private readonly IAuctionService _auctionService;
-    private readonly IVehicleService _vehicleService;
-    private readonly IBidderService _bidderService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AuctionsController"/> class.
@@ -34,10 +32,6 @@ public class AuctionsController : ControllerBase
     {
         _auctionService = auctionService ??
                           throw new ArgumentNullException(nameof(auctionService), "Auction service cannot be null.");
-        _vehicleService = vehicleService ??
-                          throw new ArgumentNullException(nameof(vehicleService), "Vehicle service cannot be null.");
-        _bidderService = bidderService ??
-                         throw new ArgumentNullException(nameof(bidderService), "Bidder service cannot be null.");
     }
 
 
@@ -49,14 +43,11 @@ public class AuctionsController : ControllerBase
     [HttpGet]
     [Route("", Name = "GetAuctions")]
     [ProducesResponseType(typeof(IEnumerable<Auction>), 200)]
-    public async Task<IActionResult> GetAuctionsAsync([FromQuery] SearchAuctionRequest request)
+    public async Task<ActionResult<IEnumerable<Auction>>> GetAuctionsAsync([FromQuery] SearchAuctionRequest request)
     {
-        var auctions = await _auctionService.Search(v =>
-            (request.AuctionId == Guid.Empty || v.Id == request.AuctionId) &&
-            (string.IsNullOrEmpty(request.Vin) ||
-             v.Vehicle.Vin.Equals(request.Vin, StringComparison.OrdinalIgnoreCase)));
+        var auctions = await _auctionService.Search(request);
 
-        return Ok(auctions);
+        return Ok(auctions.Value);
     }
 
     /// <summary>
@@ -71,26 +62,17 @@ public class AuctionsController : ControllerBase
     [Route("", Name = "CreateAuction")]
     [ProducesResponseType(typeof(CreateAuctionResponse), 200)]
     [ProducesResponseType(typeof(string), 400)]
-    public async Task<IActionResult> CreateAuctionAsync([Required] [FromBody] CreateAuctionRequest request)
+    public async Task<IActionResult> CreateAuctionAsync([Required][FromBody] CreateAuctionRequest request)
     {
-        var vehicle = await _vehicleService.GetVehicleByVinAsync(request.Vin);
-        if (vehicle.IsFailed)
-        {
-            return BadRequest(vehicle.Errors);
-        }
-
-        List<Bidder> bidders =
-            request.Bidders.ConvertAll(p => _bidderService.GetBidderByIdAsync(Guid.Parse(p)).Result.Value);
-
-        Guid auctionId = Guid.NewGuid();
-        var result = await _auctionService.CreateAuctionAsync(auctionId, vehicle.Value, bidders);
+        
+        var result = await _auctionService.CreateAuctionAsync(request);
 
         if (result.IsFailed)
         {
             return BadRequest(result.Errors);
         }
 
-        return Ok(new CreateAuctionResponse(auctionId, result.Value.StartingBid));
+        return Ok(new CreateAuctionResponse(result.Value.Id, result.Value.StartingBid));
     }
 
     /// <summary>
@@ -104,7 +86,7 @@ public class AuctionsController : ControllerBase
     [Route("start/{auctionId}", Name = "StartAuction")]
     [ProducesResponseType(200)]
     [ProducesResponseType(typeof(string), 400)]
-    public async Task<IActionResult> StartAuctionAsync([Required] [FromRoute] Guid auctionId)
+    public async Task<IActionResult> StartAuctionAsync([Required][FromRoute] Guid auctionId)
     {
         var result = await _auctionService.StartAuctionAsync(auctionId);
 
@@ -127,7 +109,7 @@ public class AuctionsController : ControllerBase
     [Route("end/{auctionId}", Name = "EndAuction")]
     [ProducesResponseType(200)]
     [ProducesResponseType(typeof(string), 400)]
-    public IActionResult EndAuctionAsync([Required] [FromRoute] Guid auctionId)
+    public IActionResult EndAuctionAsync([Required][FromRoute] Guid auctionId)
     {
         var result = _auctionService.EndAuctionAsync(auctionId);
 
@@ -150,15 +132,10 @@ public class AuctionsController : ControllerBase
     [Route("place-bid", Name = "PlaceBid")]
     [ProducesResponseType(200)]
     [ProducesResponseType(typeof(string), 400)]
-    public async Task<IActionResult> PlaceBidAsync([Required] [FromBody] PlaceBidRequest request)
+    public async Task<IActionResult> PlaceBidAsync([Required][FromBody] PlaceBidRequest request)
     {
-        var bidder = await _bidderService.GetBidderByIdAsync(request.BidderId);
-        if (bidder.IsFailed)
-        {
-            return BadRequest(bidder.Errors);
-        }
 
-        var result = await _auctionService.PlaceBidAsync(request.AuctionId, bidder.Value, request.BidAmount);
+        var result = await _auctionService.PlaceBidAsync(request);
 
         if (result.IsFailed)
         {

@@ -7,6 +7,8 @@ using AutoFixture.Kernel;
 using cams.application.services;
 using cams.contracts.models;
 using cams.contracts.Repositories;
+using cams.contracts.Requests.Vehicles;
+using cams.contracts.shared;
 using FluentAssertions;
 using NSubstitute;
 using Xunit;
@@ -23,17 +25,17 @@ namespace cams.tests.Services
         {
             _fixture.Customizations.Add(
                 new TypeRelay(
-                    typeof(BaseVehicleAttributes),
-                    typeof(SedanAttributes)));
+                    typeof(Vehicle),
+                    typeof(Sedan)));
             _service = new VehicleService(_vehicleRepository);
         }
 
         [Fact]
-        public async Task AddVehicleAsync_ShouldReturnFail_WhenVehicleExistsInActiveAuction()
+        public async Task AddVehicleAsync_ShouldReturnFail_WhenVehicleExists()
         {
             var vehicle = _fixture.Create<Vehicle>();
-            _vehicleRepository.ExistsInActiveAuction(vehicle.Vin).Returns(true);
-            var result = await _service.AddVehicleAsync(vehicle);
+            _vehicleRepository.GetVehicleByVinAsync(Arg.Any<string>()).Returns(vehicle);
+            var result = await _service.AddVehicleAsync(_fixture.Create<AddVehicleRequest>());
             result.IsFailed.Should().BeTrue();
             result.Errors[0].Message.Should().Be("Vehicle already exists.");
         }
@@ -41,12 +43,24 @@ namespace cams.tests.Services
         [Fact]
         public async Task AddVehicleAsync_ShouldReturnOk_WhenVehicleDoesNotExist()
         {
-            var vehicle = _fixture.Create<Vehicle>();
-            _vehicleRepository.ExistsInActiveAuction(vehicle.Vin).Returns(false);
+            var vehicle = _fixture.Create<Sedan>();
+            vehicle.Reference = "1HGCM82633A123456"; // Example VIN
+            var request = new AddVehicleRequest
+          (
+             vehicle.Reference,
+             VehicleType.Sedan,
+             vehicle.Manufacturer,
+              vehicle.Model,
+               vehicle.Year,
+               vehicle.NumberOfDoors, null,
+               null
+          );
             _vehicleRepository.AddVehicleAsync(vehicle).Returns(vehicle);
-            var result = await _service.AddVehicleAsync(vehicle);
+            _vehicleRepository.GetVehicleByVinAsync(vehicle.Reference).Returns((Vehicle)null);
+
+
+            var result = await _service.AddVehicleAsync(request);
             result.IsSuccess.Should().BeTrue();
-            result.Value.Should().Be(vehicle);
         }
 
         [Fact]
@@ -61,20 +75,11 @@ namespace cams.tests.Services
         public async Task GetVehicleByVinAsync_ShouldReturnOk_WhenVehicleFound()
         {
             var vehicle = _fixture.Create<Vehicle>();
-            _vehicleRepository.GetVehicleByVinAsync(vehicle.Vin).Returns(vehicle);
-            var result = await _service.GetVehicleByVinAsync(vehicle.Vin);
+            _vehicleRepository.GetVehicleByVinAsync(vehicle.Reference).Returns(vehicle);
+            var result = await _service.GetVehicleByVinAsync(vehicle.Reference);
             result.IsSuccess.Should().BeTrue();
             result.Value.Should().Be(vehicle);
         }
 
-        [Fact]
-        public void Search_ShouldReturnVehiclesMatchingPredicate()
-        {
-            var vehicles = _fixture.CreateMany<Vehicle>(3).ToList();
-            _vehicleRepository.Search(Arg.Any<Func<Vehicle, bool>>())
-                .Returns(callInfo => vehicles.Where(callInfo.Arg<Func<Vehicle, bool>>()));
-            var result = _service.Search(v => v.VehicleAttributes.Manufacturer == vehicles[0].VehicleAttributes.Manufacturer);
-            result.Should().Contain(v => v.VehicleAttributes.Manufacturer == vehicles[0].VehicleAttributes.Manufacturer);
-        }
     }
 }

@@ -2,8 +2,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoFixture;
 using AutoFixture.Kernel;
-using cams.application.repositories;
 using cams.contracts.models;
+using cams.infrastructure.repositories;
 using FluentAssertions;
 using Xunit;
 
@@ -17,8 +17,8 @@ namespace cams.tests.Repositories
         {
             _fixture.Customizations.Add(
                 new TypeRelay(
-                    typeof(BaseVehicleAttributes),
-                    typeof(SedanAttributes)));
+                    typeof(Vehicle),
+                    typeof(Sedan)));
         }
 
         [Fact]
@@ -36,7 +36,7 @@ namespace cams.tests.Repositories
             var repo = new VehicleRepository();
             var result = await repo.GetVehicleByVinAsync("VIN1234567890");
             result.Should().NotBeNull();
-            result.Vin.Should().Be("VIN1234567890");
+            result.Reference.Should().Be("VIN1234567890");
         }
 
         [Fact]
@@ -51,9 +51,9 @@ namespace cams.tests.Repositories
         public void Search_ShouldReturnMatchingVehicles()
         {
             var repo = new VehicleRepository();
-            var results = repo.Search(v => v.VehicleAttributes.Manufacturer == "Toyota");
+            var results = repo.Search(v => v.Manufacturer == "Toyota");
             results.Should().NotBeEmpty();
-            results.All(v => v.VehicleAttributes.Manufacturer == "Toyota").Should().BeTrue();
+            results.All(v => v.Manufacturer == "Toyota").Should().BeTrue();
         }
 
         [Fact]
